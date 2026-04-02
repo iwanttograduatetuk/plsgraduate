@@ -1,1 +1,5 @@
+# 제외할 폴더들 (끝에 /를 꼭 붙여줘)
 .venv/
+dig_twin/
+expert_graph/
+real_op/
