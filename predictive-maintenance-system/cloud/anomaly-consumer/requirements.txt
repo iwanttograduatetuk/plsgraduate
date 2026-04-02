@@ -1,0 +1,5 @@
+kafka-python-ng==2.2.3
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+pydantic-settings==2.7.0
+python-dotenv==1.0.1

@@ -1,0 +1,4 @@
+kafka-python-ng==2.2.3
+influxdb-client==1.46.0
+pydantic-settings==2.7.0
+python-dotenv==1.0.1

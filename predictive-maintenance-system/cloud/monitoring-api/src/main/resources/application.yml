@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: monitoring-api
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/predictive_maintenance}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+influxdb:
+  url: ${INFLUXDB_URL:http://localhost:8086}
+  token: ${INFLUXDB_TOKEN:my-token}
+  org: ${INFLUXDB_ORG:predictive-maintenance}
+  bucket: ${INFLUXDB_BUCKET:sensor-scores}
+
+server:
+  port: ${PORT:8082}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.predictive: INFO

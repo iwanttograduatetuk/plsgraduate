@@ -1,0 +1,294 @@
+###############################################################################
+# 다중 거점 CNC 예지보전 시스템 — 로컬 개발 / 통합 테스트용 Docker Compose
+#
+# 사용법:
+#   cd predictive-maintenance-system/infra
+#   docker-compose up -d
+#
+# 접속 포트:
+#   Kafka UI      http://localhost:8888
+#   Grafana       http://localhost:3000  (admin / admin)
+#   InfluxDB      http://localhost:8086
+#   Edge Agent    http://localhost:8000
+#   Fault Diag.   http://localhost:8001
+#   Notif. Svc.   http://localhost:8080
+#   Monitoring API http://localhost:8082
+###############################################################################
+
+version: '3.9'
+
+networks:
+  pm-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  influxdb-data:
+  influxdb-config:
+  grafana-data:
+  kafka-data:
+
+services:
+
+  # ── 인프라 ──────────────────────────────────────────────────────────────────
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.7.1
+    container_name: zookeeper
+    networks: [pm-net]
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.7.1
+    container_name: kafka
+    networks: [pm-net]
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168       # 7일
+      KAFKA_MESSAGE_MAX_BYTES: 10485760    # 10MB
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.7.1
+    container_name: kafka-init
+    networks: [pm-net]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --partitions 24 --replication-factor 1 --topic anomaly-events
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --partitions 24 --replication-factor 1 --topic sensor-telemetry
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --partitions 12 --replication-factor 1 --topic fault-diagnosis-requests
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --partitions 12 --replication-factor 1 --topic fault-diagnosis-results
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --partitions 24 --replication-factor 1 --topic notification-events
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --partitions  6 --replication-factor 1 --topic anomaly-events-dlq
+        echo "Kafka 토픽 생성 완료"
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    networks: [pm-net]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8888:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: postgres
+    networks: [pm-net]
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: predictive_maintenance
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: influxdb
+    networks: [pm-net]
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: adminpassword
+      DOCKER_INFLUXDB_INIT_ORG: predictive-maintenance
+      DOCKER_INFLUXDB_INIT_BUCKET: sensor-scores
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: my-token
+      DOCKER_INFLUXDB_INIT_RETENTION: 30d
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    container_name: grafana
+    networks: [pm-net]
+    depends_on:
+      influxdb:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+
+  # ── Python 마이크로서비스 ──────────────────────────────────────────────────
+
+  edge-agent:
+    build:
+      context: ../edge-agent
+      dockerfile: Dockerfile
+    container_name: edge-agent
+    networks: [pm-net]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      SITE_ID: site-A
+      MACHINE_ID: cnc-001
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DATA_REPLAY_MODE: "true"
+      DATA_REPLAY_SPEED_FACTOR: "10.0"
+      MODEL_VERSION: v1.0.0
+      LOG_LEVEL: INFO
+      DATA_PROCESSED_DATA_DIR: /edge-agent/data/processed_data_v2
+      DATA_REPLAY_CSV_DIR: /edge-agent/data/real_op
+      MODEL_DIR: /edge-agent/models
+    volumes:
+      # 실제 모델 파일 및 데이터 마운트
+      - /mnt/c/Users/u1041/Desktop/dataset_causRCA/anomaly_detection/models_lstm:/edge-agent/models:ro
+      - /mnt/c/Users/u1041/Desktop/dataset_causRCA/anomaly_detection/processed_data_v2:/edge-agent/data/processed_data_v2:ro
+      - /mnt/c/Users/u1041/Desktop/dataset_causRCA/real_op:/edge-agent/data/real_op:ro
+    restart: unless-stopped
+
+  telemetry-consumer:
+    build:
+      context: ../cloud/telemetry-consumer
+      dockerfile: Dockerfile
+    container_name: telemetry-consumer
+    networks: [pm-net]
+    depends_on:
+      kafka:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_TOKEN: my-token
+      INFLUXDB_ORG: predictive-maintenance
+      INFLUXDB_BUCKET: sensor-scores
+    restart: unless-stopped
+
+  anomaly-consumer:
+    build:
+      context: ../cloud/anomaly-consumer
+      dockerfile: Dockerfile
+    container_name: anomaly-consumer
+    networks: [pm-net]
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/predictive_maintenance
+    restart: unless-stopped
+
+  fault-diagnosis-service:
+    build:
+      context: ../cloud/fault-diagnosis-service
+      dockerfile: Dockerfile
+    container_name: fault-diagnosis-service
+    networks: [pm-net]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MODEL_VERSION: v1.0.0
+      LOG_LEVEL: INFO
+      DATA_PROCESSED_DATA_DIR: /edge-agent/data/processed_data_v2
+      DATA_REPLAY_CSV_DIR: /edge-agent/data/real_op
+      MODEL_DIR: /edge-agent/models
+    volumes:
+      - ../../expert_graph:/app/expert_graph:ro
+    restart: unless-stopped
+
+  notification-service:
+    image: notification-service:latest   # Gradle로 빌드 후 태그 필요
+    container_name: notification-service
+    networks: [pm-net]
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DB_URL: jdbc:postgresql://postgres:5432/predictive_maintenance
+      DB_USER: postgres
+      DB_PASS: postgres
+    restart: unless-stopped
+
+  monitoring-api:
+    image: monitoring-api:latest         # Gradle로 빌드 후 태그 필요
+    container_name: monitoring-api
+    networks: [pm-net]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/predictive_maintenance
+      DB_USER: postgres
+      DB_PASS: postgres
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_TOKEN: my-token
+      INFLUXDB_ORG: predictive-maintenance
+      INFLUXDB_BUCKET: sensor-scores
+    restart: unless-stopped
