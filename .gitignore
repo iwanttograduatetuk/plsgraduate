@@ -3,3 +3,9 @@
 dig_twin/
 expert_graph/
 real_op/
+venv/  
+__pycache__/  
+*.log  
+*.pkl  
+*.pt 
+.venv/
