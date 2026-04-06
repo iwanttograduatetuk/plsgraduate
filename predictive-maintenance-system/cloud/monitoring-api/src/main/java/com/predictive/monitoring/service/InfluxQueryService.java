@@ -29,7 +29,7 @@ public class InfluxQueryService {
     private String bucket;
 
     @Value("${influxdb.org}")
-    private String org;
+    private String influxOrg;
 
     /**
      * 특정 기계의 서브시스템별 이상 점수 시계열 조회.
@@ -78,7 +78,7 @@ public class InfluxQueryService {
         List<Map<String, Object>> results = new ArrayList<>();
         try {
             QueryApi queryApi = influxDBClient.getQueryApi();
-            List<FluxTable> tables = queryApi.query(flux, org);
+            List<FluxTable> tables = queryApi.query(flux, influxOrg);
             for (FluxTable table : tables) {
                 for (FluxRecord record : table.getRecords()) {
                     Map<String, Object> row = new HashMap<>(record.getValues());

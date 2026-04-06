@@ -77,7 +77,7 @@ def _build_points(msg: dict) -> list[Point]:
             .field("reconstruction_error", float(data.get("error", 0.0)))
             .field("threshold",            float(data.get("threshold", 0.0)))
             .field("is_anomaly",           bool(data.get("is_anomaly", False)))
-            .time(ts, WritePrecision.NANOSECONDS)
+            .time(ts, "ns")
         )
         points.append(p)
 
@@ -87,7 +87,7 @@ def _build_points(msg: dict) -> list[Point]:
         .tag("site_id",    site_id)
         .tag("machine_id", machine_id)
         .field("status", 1 if msg.get("machine_status") == "ANOMALY" else 0)
-        .time(ts, WritePrecision.NANOSECONDS)
+        .time(ts, "ns")
     )
     points.append(machine_point)
     return points
