@@ -1,3 +1,4 @@
 # 제외할 폴더들 (끝에 /를 꼭 붙여줘)
 .venv/
-predictive-maintenance-system/edge-agent/.venv/
+predictive-maintenance-system/edge-agent/.venv/.gradle/
+build/
