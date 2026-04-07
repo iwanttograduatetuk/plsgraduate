@@ -35,3 +35,10 @@ datasources:
     access: proxy
     url: http://monitoring-api:8082/api
     editable: true
+
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: false
+    editable: true

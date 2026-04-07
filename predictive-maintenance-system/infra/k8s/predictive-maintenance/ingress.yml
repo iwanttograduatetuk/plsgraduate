@@ -1,0 +1,42 @@
+###############################################################################
+# Ingress — 외부 접근 라우팅
+# nginx ingress controller 필요: kubectl apply -f
+# https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+###############################################################################
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pm-ingress
+  namespace: predictive-maintenance
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: cnc.local          # /etc/hosts 에 추가: <node-ip> cnc.local
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: monitoring-api
+                port:
+                  number: 8082
+          - path: /control.html
+            pathType: Exact
+            backend:
+              service:
+                name: monitoring-api
+                port:
+                  number: 8082
+          - path: /grafana
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 3000

@@ -173,9 +173,11 @@ async def lifespan(app: FastAPI):
         caustr_engines[subsys]  = CausTRInferencer(
             n_features=len(feat_names),
             model_dir=settings.model_dir,
+            subsystem=subsys,
         )
         causreg_engines[subsys] = CausRegInferencer(
             model_dir=settings.model_dir,
+            subsystem=subsys,
         )
 
     # Kafka 프로듀서

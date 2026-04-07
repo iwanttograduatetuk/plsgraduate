@@ -29,11 +29,24 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      service: monitoring-api
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 logging:
   level:
     com.predictive: INFO
+
+edge:
+  # 엣지 에이전트 base URL 맵 (machine-id → URL)
+  # 실제 배포 시 환경변수로 주입
+  base-url: ${EDGE_BASE_URL:http://edge-agent:8000}

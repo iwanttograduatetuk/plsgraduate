@@ -179,11 +179,315 @@
   "refresh": "10s",
   "schemaVersion": 39,
   "tags": ["CNC", "예지보전", "이상감지"],
-  "templating": { "list": [] },
+  "templating": {
+    "list": [
+      {
+        "name": "monitoring_url",
+        "type": "constant",
+        "label": "Monitoring API URL",
+        "query": "http://localhost:8082",
+        "current": { "value": "http://localhost:8082" },
+        "hide": 2
+      }
+    ]
+  },
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
   "title": "CNC 예지보전 — 전체 지점 현황",
   "uid": "cnc-pm-overview",
-  "version": 1
+  "version": 2,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "총 이상 감지 (미처리)",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "id": 1,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background" },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE is_resolved = false",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "긴급(CRITICAL) 이상",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "id": 2,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE severity='CRITICAL' AND is_resolved=false",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "전체 기계 대수",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "id": 3,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "blue" } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS value FROM machines",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "최근 이상 이벤트 (실시간)",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 4 },
+      "id": 4,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "감지시각", "desc": true }]
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT detected_at AS \"감지시각\", site_id AS \"지점\", machine_id AS \"기계\", subsystem AS \"서브시스템\", ROUND(anomaly_score::numeric, 3) AS \"이상점수\", severity AS \"심각도\", is_resolved AS \"처리완료\" FROM anomaly_events ORDER BY detected_at DESC LIMIT 50",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Hydraulics 재구성 오차 시계열 (site-A / cnc-001)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "id": 5,
+      "datasource": { "type": "influxdb", "uid": "InfluxDB" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "lineWidth": 2, "fillOpacity": 10 },
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "threshold" },
+            "properties": [
+              { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [5, 5] } },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+            ]
+          }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "query": "from(bucket: \"sensor-scores\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"subsystem_scores\")\n  |> filter(fn: (r) => r[\"site_id\"] == \"site-A\")\n  |> filter(fn: (r) => r[\"machine_id\"] == \"cnc-001\")\n  |> filter(fn: (r) => r[\"subsystem\"] == \"hydraulics\")\n  |> filter(fn: (r) => r[\"_field\"] == \"reconstruction_error\" or r[\"_field\"] == \"threshold\")\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Coolant / Probe 재구성 오차 시계열",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "id": 6,
+      "datasource": { "type": "influxdb", "uid": "InfluxDB" },
+      "options": { "tooltip": { "mode": "multi" } },
+      "targets": [
+        {
+          "query": "from(bucket: \"sensor-scores\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"subsystem_scores\")\n  |> filter(fn: (r) => r[\"site_id\"] == \"site-A\")\n  |> filter(fn: (r) => r[\"machine_id\"] == \"cnc-001\")\n  |> filter(fn: (r) => r[\"subsystem\"] == \"coolant\" or r[\"subsystem\"] == \"probe\")\n  |> filter(fn: (r) => r[\"_field\"] == \"reconstruction_error\")",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "barchart",
+      "title": "Root Cause 상위 변수 (최근 이상 이벤트)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+      "id": 7,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "options": { "orientation": "horizontal", "xTickLabelRotation": 0 },
+      "targets": [
+        {
+          "rawSql": "SELECT rc->>'variable' AS variable, ROUND((rc->>'score')::numeric, 3) AS score FROM fault_diagnosis_results, jsonb_array_elements(root_causes) rc ORDER BY diagnosed_at DESC, score DESC LIMIT 10",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Fault Diagnosis 결과 이력",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
+      "id": 8,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "rawSql": "SELECT fdr.diagnosed_at AS \"진단시각\", ae.site_id AS \"지점\", ae.machine_id AS \"기계\", ae.subsystem AS \"서브시스템\", fdr.model_name AS \"모델\", ROUND(fdr.confidence::numeric, 3) AS \"신뢰도\", fdr.root_causes->0->>'variable' AS \"원인1위\" FROM fault_diagnosis_results fdr JOIN anomaly_events ae ON fdr.event_id = ae.event_id ORDER BY fdr.diagnosed_at DESC LIMIT 30",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "row",
+      "title": "기계 제어 패널",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 30 },
+      "id": 9,
+      "collapsed": false
+    },
+    {
+      "type": "text",
+      "title": "CNC 기계 제어",
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 31 },
+      "id": 10,
+      "options": {
+        "mode": "html",
+        "content": "<iframe src=\"${monitoring_url}/control.html\" width=\"100%\" height=\"100%\" frameborder=\"0\" style=\"min-height:480px; border-radius:4px;\"></iframe>"
+      }
+    },
+
+    {
+      "type": "row",
+      "title": "인프라 모니터링",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 45 },
+      "id": 11,
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU 사용률 (%)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 46 },
+      "id": 12,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" } },
+      "targets": [
+        {
+          "expr": "process_cpu_usage{job=~\"monitoring-api|notification-service\"} * 100",
+          "legendFormat": "{{job}} CPU",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "JVM 힙 메모리 사용량",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 46 },
+      "id": 13,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 }
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" } },
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{area=\"heap\", job=~\"monitoring-api|notification-service\"}",
+          "legendFormat": "{{service}} {{id}}",
+          "refId": "A"
+        },
+        {
+          "expr": "jvm_memory_max_bytes{area=\"heap\", job=~\"monitoring-api|notification-service\"}",
+          "legendFormat": "{{service}} max",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP 요청 처리율 (rps)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 54 },
+      "id": 14,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"monitoring-api\"}[1m])) by (uri, method)",
+          "legendFormat": "{{method}} {{uri}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP 평균 응답 지연 (ms)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 54 },
+      "id": 15,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 200 },
+              { "color": "red", "value": 500 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_sum{job=\"monitoring-api\"}[1m]) / rate(http_server_requests_seconds_count{job=\"monitoring-api\"}[1m]) * 1000",
+          "legendFormat": "avg {{uri}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
 }

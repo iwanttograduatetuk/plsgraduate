@@ -18,7 +18,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-N_FEATURES = 89
+N_FEATURES = 89   # meta.json 로드 후 동적으로 갱신됨
 
 
 class Preprocessor:
@@ -32,6 +32,7 @@ class Preprocessor:
     """
 
     def __init__(self, processed_data_dir: Path, window_size: int = 30):
+        global N_FEATURES
         self._window_size = window_size
         self._buf: deque = deque(maxlen=window_size)
 
@@ -57,6 +58,8 @@ class Preprocessor:
             with open(meta_path) as f:
                 meta = json.load(f)
             self._feature_names: List[str] = meta["feature_names"]
+            # 실제 피처 수로 동적 갱신
+            N_FEATURES = len(self._feature_names)
         else:
             logger.warning("meta.json 없음 — 피처 이름 미사용")
             self._feature_names = [f"feat_{i}" for i in range(N_FEATURES)]

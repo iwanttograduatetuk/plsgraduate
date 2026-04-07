@@ -19,11 +19,13 @@ import logging
 import pickle
 import time
 from contextlib import asynccontextmanager
+from enum import Enum
 from typing import Optional
 
 import numpy as np
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from .config import settings
 from .collector import create_collector
@@ -49,6 +51,22 @@ _last_scores: dict = {}
 _inference_count: int = 0
 _anomaly_count: int = 0
 _last_telemetry_time: float = 0.0
+
+# 기계 제어 상태
+_machine_paused: bool = False   # STOP 명령 시 추론 루프 일시 중단
+
+
+# ── 기계 제어 DTO ──────────────────────────────────────────────────────────────
+
+class CommandEnum(str, Enum):
+    STOP   = "STOP"
+    RESUME = "RESUME"
+    ACK    = "ACK"
+
+class CommandPayload(BaseModel):
+    command: CommandEnum
+    reason:  Optional[str] = None
+    eventId: Optional[str] = None
 
 
 # ── Lifespan (시작/종료) ───────────────────────────────────────────────────────
@@ -145,6 +163,11 @@ async def _inference_loop(collector, device) -> None:
     telemetry_interval = settings.kafka.telemetry_interval_sec
 
     async for row in collector.stream():
+        # STOP 명령 시 추론 일시 중단 (데이터 수집은 유지)
+        if _machine_paused:
+            await asyncio.sleep(0.5)
+            continue
+
         # 전처리기에 row 주입 (이미 정규화된 배열)
         preprocessor.push_row(row)
 
@@ -286,3 +309,56 @@ async def get_scores():
     if not _last_scores:
         return {"status": "warming_up", "message": "윈도우 채우는 중..."}
     return _last_scores
+
+
+# ── 기계 제어 명령 ────────────────────────────────────────────────────────────
+
+@app.post("/command")
+async def machine_command(payload: CommandPayload):
+    """
+    Spring Boot monitoring-api → Edge Agent 기계 제어 엔드포인트.
+
+    STOP   : 추론 루프 일시 중단 (센서 수집은 유지) + 실제 기계 정지 신호 전달
+    RESUME : 추론 루프 재개
+    ACK    : 이상 이벤트 확인 처리 (루프 상태 변경 없음)
+    """
+    global _machine_paused
+
+    cmd = payload.command
+
+    if cmd == CommandEnum.STOP:
+        _machine_paused = True
+        logger.warning(
+            "⛔ STOP 명령 수신 — machine=%s reason=%s eventId=%s",
+            settings.machine_id, payload.reason, payload.eventId,
+        )
+        # TODO: 실제 하드웨어 PLC/M-코드 인터페이스 연결 지점
+        machine_status = "STOPPED"
+
+    elif cmd == CommandEnum.RESUME:
+        _machine_paused = False
+        logger.info(
+            "▶ RESUME 명령 수신 — machine=%s reason=%s",
+            settings.machine_id, payload.reason,
+        )
+        machine_status = "RUNNING"
+
+    elif cmd == CommandEnum.ACK:
+        logger.info(
+            "✔ ACK 명령 수신 — machine=%s eventId=%s",
+            settings.machine_id, payload.eventId,
+        )
+        # 루프 상태는 그대로 유지
+        machine_status = "STOPPED" if _machine_paused else "RUNNING"
+
+    else:
+        raise HTTPException(status_code=400, detail=f"알 수 없는 명령: {cmd}")
+
+    return {
+        "machine_id":     settings.machine_id,
+        "command":        cmd,
+        "machine_status": machine_status,
+        "paused":         _machine_paused,
+        "reason":         payload.reason,
+        "event_id":       payload.eventId,
+    }

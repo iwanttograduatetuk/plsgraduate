@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CNC 기계 제어 패널</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #111827;
+      color: #e5e7eb;
+      padding: 12px;
+      font-size: 13px;
+    }
+    h2 {
+      color: #f97316;
+      margin-bottom: 12px;
+      font-size: 15px;
+      border-bottom: 1px solid #374151;
+      padding-bottom: 6px;
+    }
+    .machine-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+    }
+    .machine-card {
+      background: #1f2937;
+      border-radius: 8px;
+      padding: 12px;
+      border: 1px solid #374151;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .machine-id { font-weight: 600; color: #f3f4f6; }
+    .status-badge {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .status-NORMAL   { background: #064e3b; color: #6ee7b7; }
+    .status-WARNING  { background: #78350f; color: #fbbf24; }
+    .status-CRITICAL { background: #7f1d1d; color: #fca5a5; }
+    .status-UNKNOWN  { background: #374151; color: #9ca3af; }
+    .site-label {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    button {
+      flex: 1;
+      padding: 6px 0;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: opacity .15s;
+    }
+    button:hover { opacity: .85; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-stop   { background: #dc2626; color: #fff; }
+    .btn-resume { background: #16a34a; color: #fff; }
+    .btn-ack    { background: #2563eb; color: #fff; }
+    .reason-input {
+      width: 100%;
+      margin-top: 6px;
+      padding: 5px 8px;
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 4px;
+      color: #e5e7eb;
+      font-size: 12px;
+    }
+    .reason-input::placeholder { color: #6b7280; }
+    .feedback {
+      margin-top: 6px;
+      font-size: 11px;
+      min-height: 16px;
+    }
+    .feedback.ok  { color: #34d399; }
+    .feedback.err { color: #f87171; }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .refresh-btn {
+      background: #374151;
+      color: #e5e7eb;
+      border: 1px solid #4b5563;
+      border-radius: 5px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .refresh-btn:hover { background: #4b5563; }
+    .filter-input {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 5px;
+      color: #e5e7eb;
+      padding: 5px 10px;
+      font-size: 12px;
+      width: 180px;
+    }
+    #toast {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 12px;
+      display: none;
+      z-index: 99;
+    }
+    #toast.ok  { border-color: #34d399; color: #34d399; }
+    #toast.err { border-color: #f87171; color: #f87171; }
+  </style>
+</head>
+<body>
+<h2>⚙ CNC 기계 제어 패널</h2>
+
+<div class="toolbar">
+  <button class="refresh-btn" onclick="loadMachines()">↻ 새로고침</button>
+  <input class="filter-input" id="filterInput" placeholder="기계 ID 검색..." oninput="renderCards()">
+</div>
+
+<div class="machine-grid" id="machineGrid">
+  <p style="color:#6b7280">로딩 중...</p>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const API = '';   // same-origin
+  let machines = [];
+
+  async function loadMachines() {
+    try {
+      const sites = await fetch(`${API}/api/sites`).then(r => r.json());
+      const all = [];
+      for (const site of sites) {
+        const list = await fetch(`${API}/api/sites/${site.siteId}/machines`).then(r => r.json());
+        list.forEach(m => all.push({ ...m, siteId: site.siteId }));
+      }
+      machines = all;
+      renderCards();
+    } catch (e) {
+      document.getElementById('machineGrid').innerHTML =
+        `<p style="color:#f87171">기계 목록 로드 실패: ${e.message}</p>`;
+    }
+  }
+
+  function renderCards() {
+    const q = document.getElementById('filterInput').value.toLowerCase();
+    const filtered = machines.filter(m =>
+      !q || m.machineId.toLowerCase().includes(q) || (m.siteId||'').toLowerCase().includes(q)
+    );
+
+    if (!filtered.length) {
+      document.getElementById('machineGrid').innerHTML =
+        '<p style="color:#6b7280">조건에 맞는 기계가 없습니다.</p>';
+      return;
+    }
+
+    document.getElementById('machineGrid').innerHTML = filtered.map(m => `
+      <div class="machine-card" id="card-${m.machineId}">
+        <div class="card-header">
+          <span class="machine-id">${m.machineId}</span>
+          <span class="status-badge status-${m.status || 'UNKNOWN'}" id="badge-${m.machineId}">
+            ${m.status || 'UNKNOWN'}
+          </span>
+        </div>
+        <div class="site-label">지점: ${m.siteId || '-'}</div>
+        <input class="reason-input" id="reason-${m.machineId}" placeholder="사유 (선택)">
+        <div class="btn-row">
+          <button class="btn-stop"   onclick="cmd('${m.machineId}','STOP')">⛔ 정지</button>
+          <button class="btn-resume" onclick="cmd('${m.machineId}','RESUME')">▶ 재개</button>
+          <button class="btn-ack"    onclick="cmd('${m.machineId}','ACK')">✔ ACK</button>
+        </div>
+        <div class="feedback" id="fb-${m.machineId}"></div>
+      </div>
+    `).join('');
+  }
+
+  async function cmd(machineId, command) {
+    const reason = document.getElementById(`reason-${machineId}`).value;
+    const fb = document.getElementById(`fb-${machineId}`);
+    fb.textContent = '처리 중...';
+    fb.className = 'feedback';
+    try {
+      const res = await fetch(`${API}/api/machines/${machineId}/command`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command, reason })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.message || res.status);
+
+      const badge = document.getElementById(`badge-${machineId}`);
+      badge.className = `status-badge status-${data.status}`;
+      badge.textContent = data.status;
+
+      fb.textContent = `${command} 완료 (edge: ${data.edgeResult})`;
+      fb.className = 'feedback ok';
+      showToast(`${machineId} → ${command} OK`, 'ok');
+    } catch (e) {
+      fb.textContent = `오류: ${e.message}`;
+      fb.className = 'feedback err';
+      showToast(`${machineId} → ${command} 실패`, 'err');
+    }
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = type;
+    t.style.display = 'block';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.display = 'none'; }, 3000);
+  }
+
+  // 자동 갱신 30초
+  loadMachines();
+  setInterval(loadMachines, 30000);
+</script>
+</body>
+</html>

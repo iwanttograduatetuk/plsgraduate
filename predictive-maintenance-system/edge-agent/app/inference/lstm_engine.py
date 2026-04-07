@@ -60,11 +60,12 @@ class LSTMDecoder(nn.Module):
 class LSTMAutoencoder(nn.Module):
     def __init__(self, n_feat: int, hidden: int, latent: int, n_layers: int, seq_len: int):
         super().__init__()
-        self.encoder = LSTMEncoder(n_feat, hidden, latent, n_layers)
-        self.decoder = LSTMDecoder(latent, hidden, n_feat, n_layers, seq_len)
+        # 코랩 학습 모델 키 맞춤: enc / dec
+        self.enc = LSTMEncoder(n_feat, hidden, latent, n_layers)
+        self.dec = LSTMDecoder(latent, hidden, n_feat, n_layers, seq_len)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.decoder(self.encoder(x))
+        return self.dec(self.enc(x))
 
 
 # ── 모델 메타데이터 컨테이너 ───────────────────────────────────────────────────

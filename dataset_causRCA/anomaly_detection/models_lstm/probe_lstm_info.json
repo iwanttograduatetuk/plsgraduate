@@ -1,0 +1,8 @@
+{
+  "n_features": 11,
+  "hidden_size": 64,
+  "latent_dim": 32,
+  "n_layers": 2,
+  "window_size": 30,
+  "threshold_3sigma": 0.021065916965939888
+}

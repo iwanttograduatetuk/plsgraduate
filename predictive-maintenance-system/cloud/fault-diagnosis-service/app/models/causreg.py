@@ -39,12 +39,14 @@ class CausRegInferencer:
     회귀 모델 파일이 없으면 통계 기반 fallback 사용.
     """
 
-    def __init__(self, model_dir: Optional[Path] = None):
+    def __init__(self, model_dir: Optional[Path] = None, subsystem: str = ""):
         self._regressors: Dict[str, object] = {}   # feat_name → Ridge
         self._scaler: Optional[object] = None
 
         if model_dir is not None:
-            pkl_path = model_dir / "causreg.pkl"
+            pkl_path = model_dir / f"causreg_{subsystem}.pkl" if subsystem else model_dir / "causreg.pkl"
+            if not pkl_path.exists():
+                pkl_path = model_dir / "causreg.pkl"
             if pkl_path.exists():
                 with open(pkl_path, "rb") as f:
                     saved = pickle.load(f)

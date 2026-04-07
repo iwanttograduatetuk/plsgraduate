@@ -1,0 +1,39 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+
+  - job_name: 'monitoring-api'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['monitoring-api:8082']
+        labels:
+          service: monitoring-api
+
+  - job_name: 'notification-service'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['notification-service:8080']
+        labels:
+          service: notification-service
+
+  - job_name: 'edge-agent'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['edge-agent:8000']
+        labels:
+          service: edge-agent
+
+  - job_name: 'fault-diagnosis-service'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['fault-diagnosis-service:8001']
+        labels:
+          service: fault-diagnosis-service
+
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:9092']
+        labels:
+          service: kafka

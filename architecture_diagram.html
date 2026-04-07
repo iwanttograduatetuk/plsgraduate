@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>CNC 예지보전 시스템 아키텍처 v2</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    padding: 32px;
+    min-width: 1300px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .version-badge {
+    text-align: center;
+    font-size: 11px;
+    color: #475569;
+    margin-bottom: 28px;
+  }
+
+  .diagram { display: flex; flex-direction: column; gap: 0; }
+
+  .layer {
+    border-radius: 12px;
+    padding: 18px 22px;
+    position: relative;
+  }
+  .layer-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 12px; opacity: 0.6;
+  }
+
+  .layer-edge    { background: #1a2332; border: 1px solid #2d4a6e; }
+  .layer-kafka   { background: #1a1a2e; border: 1px solid #4a3a6e; }
+  .layer-cloud   { background: #1a2818; border: 1px solid #2d5a2d; }
+  .layer-grafana { background: #1a1410; border: 1px solid #7c3010; }
+
+  .boxes { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+
+  .box {
+    border-radius: 8px; padding: 11px 13px;
+    font-size: 12px; line-height: 1.6; flex: 1; min-width: 130px;
+  }
+  .box-title {
+    font-weight: 700; font-size: 12px; margin-bottom: 5px;
+    display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  }
+  .box-sub { font-size: 10px; opacity: 0.65; line-height: 1.5; }
+  .tag {
+    font-size: 9px; padding: 1px 5px; border-radius: 3px;
+    font-weight: 700; letter-spacing: 0.5px; white-space: nowrap;
+  }
+  .tag-py   { background: #166534; color: #86efac; }
+  .tag-java { background: #1e3a5f; color: #93c5fd; }
+  .tag-db   { background: #3b1f6e; color: #c4b5fd; }
+  .tag-ai   { background: #0f3d0f; color: #4ade80; }
+  .tag-new  { background: #7c2d12; color: #fed7aa; }
+
+  /* Edge */
+  .box-cnc      { background: #0d1f33; border: 1px solid #2563eb; }
+  .box-ae       { background: #0d1f33; border: 1px solid #3b82f6; }
+  .box-producer { background: #0d1f33; border: 1px solid #1d4ed8; }
+  .box-consumer-edge { background: #0d1f33; border: 2px solid #f97316; }
+
+  /* Kafka */
+  .box-kafka    { background: #150d2e; border: 1px solid #7c3aed; }
+  .box-kafka-new{ background: #150d2e; border: 2px solid #f97316; }
+  .topic        { display: inline-block; background: #2d1b69; color: #a78bfa;
+                  font-size: 10px; padding: 2px 6px; border-radius: 3px;
+                  margin: 2px 2px 0 0; font-weight: 600; }
+  .topic-new    { display: inline-block; background: #431407; color: #fb923c;
+                  font-size: 10px; padding: 2px 6px; border-radius: 3px;
+                  margin: 2px 2px 0 0; font-weight: 600; border: 1px solid #c2410c; }
+
+  /* Cloud */
+  .box-py    { background: #0d1f0d; border: 1px solid #16a34a; }
+  .box-sb    { background: #0d1f0d; border: 1px solid #15803d; }
+  .box-sb-new{ background: #0d1f0d; border: 2px solid #f97316; }
+  .box-db    { background: #0a1a0a; border: 1px solid #166534; }
+  .box-ai    { background: #0d1f0d; border: 1px solid #22c55e; }
+
+  /* Grafana */
+  .box-grafana-cnc  { background: #200e00; border: 1px solid #c2410c; }
+  .box-grafana-infra{ background: #1a0d00; border: 1px solid #9a3412; }
+  .box-grafana-ctrl { background: #1a0d00; border: 2px solid #f97316; }
+  .box-mobile       { background: #1a0d00; border: 1px solid #ea580c; }
+
+  .flow-arrow { text-align: center; font-size: 20px; color: #334155; padding: 3px 0; }
+
+  /* 역방향 화살표 */
+  .reverse-flow {
+    display: flex; align-items: center; justify-content: center;
+    padding: 2px 0; gap: 6px;
+  }
+  .reverse-arrow {
+    font-size: 11px; color: #f97316;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  .subsys { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+  .subsys-badge { font-size: 10px; padding: 1px 7px; border-radius: 3px; font-weight: 600; }
+  .sb-coolant    { background: #0c3547; color: #38bdf8; border: 1px solid #0369a1; }
+  .sb-hydraulics { background: #2d1b00; color: #fb923c; border: 1px solid #c2410c; }
+  .sb-probe      { background: #1a0a2e; color: #a78bfa; border: 1px solid #6d28d9; }
+
+  .section-divider { border: none; border-top: 1px dashed #1e293b; margin: 10px 0; }
+
+  /* Grafana 대시보드 내부 패널 */
+  .grafana-panel {
+    border-radius: 6px; padding: 8px 10px;
+    font-size: 10px; background: #0f0800;
+    border: 1px solid #431407;
+    margin-top: 6px;
+  }
+  .grafana-panel-title {
+    font-size: 11px; font-weight: 700; color: #fb923c; margin-bottom: 4px;
+  }
+  .panel-item {
+    display: flex; align-items: center; gap: 5px;
+    color: #64748b; font-size: 10px; margin-top: 2px;
+  }
+  .panel-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* 컨트롤 버튼 */
+  .ctrl-btn {
+    display: inline-block; font-size: 10px; padding: 2px 8px;
+    border-radius: 4px; font-weight: 700; margin: 2px 2px 0 0;
+  }
+  .btn-stop    { background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; }
+  .btn-resume  { background: #14532d; color: #86efac; border: 1px solid #16a34a; }
+  .btn-ack     { background: #1e3a8a; color: #93c5fd; border: 1px solid #2563eb; }
+
+  /* 데이터소스 태그 */
+  .ds-tag {
+    font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 600;
+    background: #1c1c2e; border: 1px solid #4a3a6e; color: #a78bfa;
+  }
+
+  .new-label {
+    font-size: 9px; padding: 1px 5px; border-radius: 3px;
+    background: #431407; color: #fed7aa; font-weight: 700;
+    border: 1px solid #c2410c; white-space: nowrap;
+  }
+
+  .arr { color: #475569; font-size: 13px; }
+
+  /* 두 컬럼 */
+  .two-col { display: flex; gap: 10px; }
+  .two-col > * { flex: 1; }
+
+  /* 범례 */
+  .legend {
+    display: flex; gap: 16px; justify-content: center;
+    margin-top: 18px; flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #64748b; }
+  .legend-dot  { width: 10px; height: 10px; border-radius: 2px; }
+
+  .warn-box {
+    background: #1c0a00; border: 1px solid #c2410c; border-radius: 6px;
+    padding: 6px 12px; font-size: 11px; color: #fb923c;
+    margin-bottom: 10px; display: inline-block;
+  }
+</style>
+</head>
+<body>
+
+<h1>🏭 CNC 예지보전 중앙관리 시스템 — 아키텍처 v2</h1>
+<div class="version-badge">양방향 제어 + 통합 Grafana 모니터링 반영</div>
+
+<div class="diagram">
+
+  <!-- ═══════════════ GRAFANA (맨 위로) ═══════════════ -->
+  <div class="layer layer-grafana">
+    <div class="layer-label">📊 Grafana — 관리자 통합 모니터링 화면 (단일 대시보드)</div>
+
+    <div class="boxes">
+
+      <!-- CNC 모니터링 패널 -->
+      <div class="box box-grafana-cnc" style="flex:3;">
+        <div class="box-title">🔧 CNC 기계 모니터링 패널</div>
+        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
+          <span class="ds-tag">datasource: InfluxDB</span>
+          <span class="ds-tag">datasource: PostgreSQL</span>
+          <span class="ds-tag">datasource: monitoring-api</span>
+        </div>
+        <div class="grafana-panel" style="margin-top:8px;">
+          <div class="grafana-panel-title">📈 서브시스템별 이상 점수 (실시간 시계열)</div>
+          <div class="panel-item"><div class="panel-dot" style="background:#38bdf8;"></div>coolant reconstruction error / threshold</div>
+          <div class="panel-item"><div class="panel-dot" style="background:#fb923c;"></div>hydraulics reconstruction error / threshold</div>
+          <div class="panel-item"><div class="panel-dot" style="background:#a78bfa;"></div>probe reconstruction error / threshold</div>
+        </div>
+        <div class="grafana-panel">
+          <div class="grafana-panel-title">🚨 이상 이벤트 이력 테이블</div>
+          <div class="panel-item"><div class="panel-dot" style="background:#ef4444;"></div>시각 | 지점 | 기계 | 서브시스템 | 점수 | 심각도</div>
+        </div>
+        <div class="grafana-panel">
+          <div class="grafana-panel-title">🔍 원인 진단 결과 (CausTR / CausReg)</div>
+          <div class="panel-item"><div class="panel-dot" style="background:#4ade80;"></div>원인 변수 Bar Chart (기여도 랭킹)</div>
+        </div>
+      </div>
+
+      <!-- 인프라 모니터링 패널 -->
+      <div class="box box-grafana-infra" style="flex:2;">
+        <div class="box-title">🖥 클라우드 인프라 모니터링 패널</div>
+        <div style="margin-top:4px;"><span class="ds-tag">datasource: Prometheus</span></div>
+        <div class="grafana-panel" style="margin-top:8px;">
+          <div class="grafana-panel-title">📊 K8s 서비스 상태</div>
+          <div class="panel-item"><div class="panel-dot" style="background:#fbbf24;"></div>CPU / 메모리 사용률</div>
+          <div class="panel-item"><div class="panel-dot" style="background:#34d399;"></div>Pod 상태 (Running / Pending)</div>
+          <div class="panel-item"><div class="panel-dot" style="background:#f87171;"></div>Kafka lag / consumer 상태</div>
+        </div>
+        <div class="grafana-panel">
+          <div class="grafana-panel-title">📡 네트워크 / 응답시간</div>
+          <div class="panel-item"><div class="panel-dot" style="background:#60a5fa;"></div>API 응답 지연 (monitoring-api)</div>
+          <div class="panel-item"><div class="panel-dot" style="background:#818cf8;"></div>InfluxDB / PostgreSQL 상태</div>
+        </div>
+      </div>
+
+      <!-- 기계 제어 패널 (NEW) -->
+      <div class="box box-grafana-ctrl" style="flex:1.5;">
+        <div class="box-title">
+          🎛 기계 제어 패널
+          <span class="new-label">NEW</span>
+        </div>
+        <div class="box-sub" style="margin-bottom:6px;">Button Panel 플러그인<br>→ monitoring-api 호출</div>
+        <div>
+          <span class="ctrl-btn btn-stop">⏹ 기계 정지</span>
+          <span class="ctrl-btn btn-resume">▶ 재가동</span>
+          <span class="ctrl-btn btn-ack">✓ 알림 확인</span>
+        </div>
+        <div style="font-size:10px;color:#64748b;margin-top:8px;">
+          POST /api/machines/{id}/command<br>
+          → Kafka machine-commands 발행<br>
+          → Edge 수신 후 CNC 제어
+        </div>
+        <div class="grafana-panel" style="margin-top:6px;">
+          <div class="grafana-panel-title">🔴 기계 상태 현황</div>
+          <div class="panel-item"><div class="panel-dot" style="background:#4ade80;"></div>NORMAL · WARNING · CRITICAL</div>
+          <div class="panel-item"><div class="panel-dot" style="background:#f87171;"></div>지점별 기계 그리드 뷰</div>
+        </div>
+      </div>
+
+      <!-- 모바일 -->
+      <div class="box box-mobile" style="flex:1; min-width:120px; max-width:150px;">
+        <div class="box-title">📱 알림</div>
+        <div class="box-sub">FCM / APNs<br>WebSocket<br><br>지점 관리자<br>↕<br>중앙관리자</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 역방향 화살표 표시 -->
+  <div style="display:flex;justify-content:space-between;padding:4px 40px;">
+    <div style="font-size:11px;color:#64748b;text-align:center;">↓ 데이터 조회<br><span style="font-size:9px;opacity:0.6;">(InfluxDB / PostgreSQL / API)</span></div>
+    <div style="font-size:11px;color:#f97316;text-align:center;">↑↓ 제어 명령<br><span style="font-size:9px;opacity:0.6;">(Button Panel → API)</span></div>
+    <div style="font-size:11px;color:#64748b;text-align:center;">↓ 메트릭<br><span style="font-size:9px;opacity:0.6;">(Prometheus scrape)</span></div>
+  </div>
+
+  <!-- ═══════════════ CLOUD ═══════════════ -->
+  <div class="layer layer-cloud">
+    <div class="layer-label">☁️ Cloud Layer — Kubernetes Cluster</div>
+
+    <div class="boxes" style="margin-bottom:10px;">
+
+      <div class="box box-py">
+        <div class="box-title">telemetry-consumer <span class="tag tag-py">Python</span></div>
+        <div class="box-sub">sensor-telemetry 소비 → InfluxDB 저장</div>
+      </div>
+
+      <div class="box box-py">
+        <div class="box-title">anomaly-consumer <span class="tag tag-py">Python</span></div>
+        <div class="box-sub">anomaly-events 소비<br>PostgreSQL 저장 + diagnosis 트리거</div>
+      </div>
+
+      <div class="box box-ai" style="flex:2;">
+        <div class="box-title">fault-diagnosis-service <span class="tag tag-ai">Python+AI</span></div>
+        <div style="display:flex;gap:6px;margin-top:5px;">
+          <div style="background:#0a2a0a;border:1px solid #15803d;border-radius:5px;padding:7px;flex:1;font-size:10px;">
+            <div style="font-weight:700;color:#4ade80;margin-bottom:2px;">CausTR</div>
+            <div style="color:#64748b;">Transformer 기반<br>인과 기여도</div>
+          </div>
+          <div style="background:#0a2a0a;border:1px solid #15803d;border-radius:5px;padding:7px;flex:1;font-size:10px;">
+            <div style="font-weight:700;color:#4ade80;margin-bottom:2px;">CausReg</div>
+            <div style="color:#64748b;">Ridge Regression<br>잔차 기반 RCA</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- monitoring-api (NEW 엔드포인트) -->
+      <div class="box box-sb-new" style="flex:2;">
+        <div class="box-title">
+          monitoring-api
+          <span class="tag tag-java">Spring Boot</span>
+          <span class="new-label">제어 API 추가</span>
+        </div>
+        <div style="font-size:10px;color:#86efac;margin-top:4px;">
+          GET /api/sites · /api/anomalies<br>
+          GET /api/machines/{id}/telemetry<br>
+          GET /api/metrics/summary
+        </div>
+        <div style="font-size:10px;color:#fb923c;margin-top:5px;border-top:1px dashed #431407;padding-top:5px;">
+          ✦ POST /api/machines/{id}/command<br>
+          <span style="color:#64748b;">→ machine-commands 토픽 발행</span>
+        </div>
+      </div>
+
+      <div class="box box-sb">
+        <div class="box-title">notification-service <span class="tag tag-java">Spring Boot</span></div>
+        <div class="box-sub">FCM / APNs 푸시<br>WebSocket 실시간<br>알림 이력 저장</div>
+      </div>
+
+    </div>
+
+    <hr class="section-divider">
+
+    <div class="boxes">
+      <div class="box box-db">
+        <div class="box-title">🗄 PostgreSQL <span class="tag tag-db">DB</span></div>
+        <div class="box-sub">anomaly_events<br>fault_diagnosis_results<br>sites · machines · managers</div>
+      </div>
+      <div class="box box-db">
+        <div class="box-title">📈 InfluxDB <span class="tag tag-db">TimeSeries</span></div>
+        <div class="box-sub">subsystem_scores<br>reconstruction_error<br>threshold · is_anomaly</div>
+      </div>
+      <div class="box" style="background:#0f0f0f;border:1px solid #374151;flex:2;">
+        <div class="box-title" style="color:#9ca3af;">🔴 Prometheus</div>
+        <div class="box-sub">K8s 서비스 메트릭 수집<br>CPU · 메모리 · Pod 상태<br>Kafka consumer lag</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 화살표 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 60px;">
+    <div style="font-size:13px;color:#334155;text-align:center;">↑ 이벤트 / 텔레메트리</div>
+    <div style="font-size:13px;color:#f97316;text-align:center;">↓ machine-commands 토픽</div>
+  </div>
+
+  <!-- ═══════════════ KAFKA ═══════════════ -->
+  <div class="layer layer-kafka">
+    <div class="layer-label">📨 Apache Kafka — Message Broker</div>
+    <div class="boxes">
+      <div class="box box-kafka">
+        <div class="box-title"><span class="topic">sensor-telemetry</span></div>
+        <div class="box-sub">엣지 → 클라우드<br>30s 집계 점수</div>
+      </div>
+      <div class="box box-kafka">
+        <div class="box-title"><span class="topic">anomaly-events</span></div>
+        <div class="box-sub">엣지 → 클라우드<br>이상 즉시 발행</div>
+      </div>
+      <div class="box box-kafka">
+        <div class="box-title"><span class="topic">fault-diagnosis-*</span></div>
+        <div class="box-sub">requests / results<br>원인 진단 파이프</div>
+      </div>
+      <div class="box box-kafka">
+        <div class="box-title"><span class="topic">notification-events</span></div>
+        <div class="box-sub">알림 트리거</div>
+      </div>
+      <!-- NEW 토픽 -->
+      <div class="box box-kafka-new">
+        <div class="box-title">
+          <span class="topic-new">machine-commands</span>
+          <span class="new-label">NEW</span>
+        </div>
+        <div class="box-sub" style="color:#fb923c;">클라우드 → 엣지<br>역방향 제어 명령<br>STOP / RESUME / ACK</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 화살표 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 60px;">
+    <div style="font-size:13px;color:#334155;text-align:center;">↑ 데이터 발행</div>
+    <div style="font-size:13px;color:#f97316;text-align:center;">↓ 명령 수신</div>
+  </div>
+
+  <!-- ═══════════════ EDGE ═══════════════ -->
+  <div class="layer layer-edge">
+    <div class="layer-label">🔩 Edge Layer — 각 공장 현장</div>
+    <div class="boxes">
+
+      <div class="box box-cnc" style="max-width:170px;flex:0 0 170px;">
+        <div class="box-title">🔧 CNC 선반</div>
+        <div class="box-sub">OPC-UA / MQTT<br>89 features / 1초</div>
+      </div>
+
+      <div style="display:flex;align-items:center;color:#334155;font-size:16px;">→</div>
+
+      <div class="box box-ae" style="flex:2;">
+        <div class="box-title">🧠 LSTM Autoencoder <span class="tag tag-ai">비지도학습</span></div>
+        <div class="subsys">
+          <span class="subsys-badge sb-coolant">coolant 15feat / 3σ=0.0158</span>
+          <span class="subsys-badge sb-hydraulics">hydraulics 19feat / 3σ=0.0287</span>
+          <span class="subsys-badge sb-probe">probe 11feat / 3σ=0.0262</span>
+        </div>
+        <div class="box-sub" style="margin-top:5px;">재구성 오차 → 임계값 비교 → 이상 판정 | window=30 stride=3</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#334155;">
+        <div style="font-size:10px;color:#475569;">정상→30s 집계</div>
+        <div style="font-size:16px;">→</div>
+        <div style="font-size:10px;color:#ef4444;">이상→즉시 발행</div>
+      </div>
+
+      <div class="box box-producer">
+        <div class="box-title">📤 Kafka Producer</div>
+        <div class="box-sub">
+          <span class="topic">sensor-telemetry</span><br>
+          <span class="topic">anomaly-events</span>
+        </div>
+      </div>
+
+      <!-- NEW: Command Consumer -->
+      <div class="box box-consumer-edge">
+        <div class="box-title">
+          📥 Command Consumer
+          <span class="new-label">NEW</span>
+        </div>
+        <div class="box-sub" style="color:#fb923c;">machine-commands 수신<br>→ CNC 정지 / 재가동<br>→ 상태 업데이트</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- 범례 -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div>Edge (Python+PyTorch)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7c3aed;"></div>Kafka</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#16a34a;"></div>Cloud Python 서비스</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#15803d;"></div>Spring Boot</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#166534;"></div>Database</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ea580c;"></div>Grafana 대시보드</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f97316;"></div>신규 추가 (v2)</div>
+</div>
+
+</body>
+</html>

@@ -88,13 +88,15 @@ class CausTRInferencer:
     가중치 파일이 없으면 통계 기반 fallback으로 동작.
     """
 
-    def __init__(self, n_features: int, model_dir: Optional[Path] = None):
+    def __init__(self, n_features: int, model_dir: Optional[Path] = None, subsystem: str = ""):
         self._n_features = n_features
         self._model = None
         self._device = None
 
         if TORCH_AVAILABLE and model_dir is not None:
-            pt_path = model_dir / "caustr.pt"
+            pt_path = model_dir / f"caustr_{subsystem}.pt" if subsystem else model_dir / "caustr.pt"
+            if not pt_path.exists():
+                pt_path = model_dir / "caustr.pt"
             if pt_path.exists():
                 self._device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                 self._model = CausTRModel(n_features).to(self._device)

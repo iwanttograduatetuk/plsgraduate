@@ -1,0 +1,87 @@
+###############################################################################
+# KEDA ScaledObject — Kafka Consumer Lag 기반 오토스케일링
+#
+# 전제조건:
+#   helm repo add kedacore https://kedacore.github.io/charts
+#   helm install keda kedacore/keda --namespace keda --create-namespace
+#
+# lagThreshold: 파티션당 미처리 메시지 수 기준
+#   - sensor-telemetry  : 파티션 24개, 임계 500  → 최대 12 Pod
+#   - anomaly-events    : 파티션 24개, 임계 100  → 최대 8 Pod (이상 감지 즉시 처리)
+#   - fault-diagnosis   : 파티션 12개, 임계 50   → 최대 6 Pod (모델 추론 무거움)
+###############################################################################
+
+# ── telemetry-consumer ────────────────────────────────────────────────────────
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: telemetry-consumer-scaledobject
+  namespace: predictive-maintenance
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: telemetry-consumer
+  minReplicaCount: 2
+  maxReplicaCount: 12
+  cooldownPeriod: 60          # 스케일 다운 대기 (초)
+  pollingInterval: 15
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka.kafka.svc.cluster.local:9092
+        consumerGroup: telemetry-consumer-group
+        topic: sensor-telemetry
+        lagThreshold: "500"   # 파티션당 미처리 500건 초과 시 스케일 업
+        offsetResetPolicy: latest
+
+# ── anomaly-consumer ──────────────────────────────────────────────────────────
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: anomaly-consumer-scaledobject
+  namespace: predictive-maintenance
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: anomaly-consumer
+  minReplicaCount: 2
+  maxReplicaCount: 8
+  cooldownPeriod: 60
+  pollingInterval: 15
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka.kafka.svc.cluster.local:9092
+        consumerGroup: anomaly-consumer-group
+        topic: anomaly-events
+        lagThreshold: "100"   # 이상 이벤트는 빠르게 처리 (임계 낮게)
+        offsetResetPolicy: latest
+
+# ── fault-diagnosis-service ───────────────────────────────────────────────────
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: fault-diagnosis-scaledobject
+  namespace: predictive-maintenance
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fault-diagnosis-service
+  minReplicaCount: 1
+  maxReplicaCount: 6
+  cooldownPeriod: 120         # 모델 로딩 무거워서 다운 대기 길게
+  pollingInterval: 15
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka.kafka.svc.cluster.local:9092
+        consumerGroup: fault-diagnosis-group
+        topic: fault-diagnosis-requests
+        lagThreshold: "50"    # 추론 비용 크므로 일찍 스케일 업
+        offsetResetPolicy: latest

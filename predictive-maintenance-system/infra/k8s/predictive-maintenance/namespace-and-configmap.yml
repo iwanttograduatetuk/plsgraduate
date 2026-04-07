@@ -15,6 +15,7 @@ data:
   INFLUXDB_ORG: "predictive-maintenance"
   INFLUXDB_BUCKET: "sensor-scores"
   LOG_LEVEL: "INFO"
+  EDGE_BASE_URL: "http://edge-agent.predictive-maintenance.svc.cluster.local:8000"
 ---
 apiVersion: v1
 kind: Secret

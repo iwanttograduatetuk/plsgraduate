@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>CNC 예지보전 시스템 — 최종 아키텍처</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #0f1117;
+  color: #e2e8f0;
+  padding: 40px;
+  min-width: 960px;
+}
+
+/* 헤더 */
+h1 { text-align: center; font-size: 20px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+.subtitle { text-align: center; font-size: 12px; color: #475569; margin-bottom: 36px; }
+
+/* 레이어 */
+.layer {
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 0;
+  position: relative;
+}
+.layer + .layer { margin-top: 0; }
+
+.L-edge    { background: #111c2d; border: 1px solid #1e40af; }
+.L-kafka   { background: #13102a; border: 1px solid #5b21b6; }
+.L-cloud   { background: #0d1f10; border: 1px solid #166534; }
+.L-grafana { background: #1c100a; border: 1px solid #9a3412; }
+
+.layer-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; opacity: 0.45; margin-bottom: 14px;
+}
+
+/* 박스 */
+.row { display: flex; gap: 10px; align-items: stretch; }
+.box {
+  border-radius: 9px; padding: 13px 15px;
+  font-size: 11px; line-height: 1.65; flex: 1;
+}
+.box h3 { font-size: 13px; font-weight: 700; margin-bottom: 5px; }
+.box p  { font-size: 11px; color: #64748b; }
+
+/* 박스 색상 */
+.b-blue   { background: #0c1a33; border: 1px solid #2563eb; }
+.b-indigo { background: #0f0d28; border: 1px solid #4f46e5; }
+.b-purple { background: #130e28; border: 1px solid #7c3aed; }
+.b-green  { background: #0b1f0d; border: 1px solid #16a34a; }
+.b-teal   { background: #0a1f1a; border: 1px solid #0f766e; }
+.b-orange { background: #1c0d00; border: 1px solid #ea580c; }
+.b-red    { background: #1f0a0a; border: 1px solid #dc2626; }
+.b-slate  { background: #111827; border: 1px solid #374151; }
+
+/* 태그 */
+.tag {
+  display: inline-block; font-size: 9px; font-weight: 700;
+  padding: 1px 6px; border-radius: 3px; margin-left: 4px;
+  vertical-align: middle;
+}
+.t-py   { background: #14532d; color: #86efac; }
+.t-java { background: #1e3a5f; color: #93c5fd; }
+.t-ai   { background: #1a3a0d; color: #4ade80; }
+.t-new  { background: #431407; color: #fdba74; }
+
+/* 배지들 */
+.badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+.badge  {
+  font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600;
+}
+.bd-blue   { background: #0c2a5e; color: #93c5fd; border: 1px solid #1d4ed8; }
+.bd-orange { background: #431407; color: #fdba74; border: 1px solid #c2410c; }
+.bd-purple { background: #2d1b69; color: #c4b5fd; border: 1px solid #6d28d9; }
+.bd-green  { background: #0f3d0f; color: #86efac; border: 1px solid #15803d; }
+.bd-red    { background: #450a0a; color: #fca5a5; border: 1px solid #991b1b; }
+
+/* 구분선 */
+.divider { border: none; border-top: 1px dashed #1e293b; margin: 12px 0; }
+
+/* 화살표 영역 */
+.arrows {
+  display: flex; justify-content: space-between;
+  padding: 6px 80px; font-size: 11px; color: #334155;
+}
+.arr-down   { color: #334155; }
+.arr-orange { color: #ea580c; }
+
+/* Grafana 패널 내부 */
+.g-panels { display: flex; gap: 10px; }
+.g-panel  { flex: 1; border-radius: 7px; padding: 11px 13px; }
+.gp-cnc   { background: #1a0d00; border: 1px solid #c2410c; }
+.gp-infra { background: #120a00; border: 1px solid #7c3010; }
+.gp-ctrl  { background: #1a0d00; border: 2px solid #ea580c; }
+
+.g-panel h4 { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+.g-panel li { font-size: 10px; color: #64748b; margin-top: 3px; list-style: none; padding-left: 10px; }
+.g-panel li::before { content: '·'; margin-right: 4px; color: #475569; }
+
+/* 제어 버튼 */
+.ctrl-btns { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; }
+.cb { font-size: 10px; padding: 3px 10px; border-radius: 4px; font-weight: 700; }
+.cb-stop   { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
+.cb-run    { background: #14532d; color: #86efac; border: 1px solid #22c55e; }
+.cb-ack    { background: #1e3a8a; color: #93c5fd; border: 1px solid #3b82f6; }
+
+/* 범례 */
+.legend {
+  display: flex; gap: 14px; justify-content: center;
+  margin-top: 20px; flex-wrap: wrap; font-size: 10px; color: #475569;
+}
+.lg { display: flex; align-items: center; gap: 5px; }
+.ld { width: 10px; height: 10px; border-radius: 2px; }
+
+/* 작은 노트 */
+.note { font-size: 10px; color: #475569; margin-top: 6px; font-style: italic; }
+</style>
+</head>
+<body>
+
+<h1>🏭 CNC 선반 예지보전 중앙관리 시스템</h1>
+<div class="subtitle">최종 아키텍처 — 팀 공유용</div>
+
+<!-- ─── GRAFANA ─── -->
+<div class="layer L-grafana">
+  <div class="layer-title">📊 Grafana — 관리자 통합 대시보드</div>
+  <div class="g-panels">
+
+    <div class="g-panel gp-cnc">
+      <h4>🔧 CNC 모니터링</h4>
+      <ul>
+        <li>서브시스템 이상 점수 시계열</li>
+        <li>이상 이벤트 이력 테이블</li>
+        <li>원인 진단 결과 (CausTR/CausReg)</li>
+      </ul>
+      <div style="margin-top:8px;font-size:9px;color:#475569;">
+        datasource: InfluxDB · PostgreSQL · monitoring-api
+      </div>
+    </div>
+
+    <div class="g-panel gp-infra">
+      <h4>🖥 인프라 모니터링</h4>
+      <ul>
+        <li>CPU · 메모리 · Pod 상태</li>
+        <li>Kafka consumer lag</li>
+        <li>API 응답 지연</li>
+      </ul>
+      <div style="margin-top:8px;font-size:9px;color:#475569;">
+        datasource: Prometheus
+      </div>
+    </div>
+
+    <div class="g-panel gp-ctrl">
+      <h4>🎛 기계 제어 <span class="tag t-new">iframe</span></h4>
+      <div class="note">Spring Boot 서빙 웹페이지</div>
+      <div class="ctrl-btns">
+        <span class="cb cb-stop">⏹ 정지</span>
+        <span class="cb cb-run">▶ 재가동</span>
+        <span class="cb cb-ack">✓ 확인</span>
+      </div>
+      <ul style="margin-top:6px;">
+        <li>기계 상태 현황 그리드</li>
+        <li>이벤트 로그 조회</li>
+      </ul>
+    </div>
+
+    <div class="g-panel" style="background:#120a00;border:1px solid #7c3010;flex:0 0 100px;">
+      <h4>📱 알림</h4>
+      <ul>
+        <li>FCM / APNs</li>
+        <li>WebSocket</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<div class="arrows">
+  <span class="arr-down">↑ 데이터 조회</span>
+  <span class="arr-orange">↑↓ HTTP (제어 명령)</span>
+  <span class="arr-down">↑ Prometheus scrape</span>
+</div>
+
+<!-- ─── CLOUD ─── -->
+<div class="layer L-cloud">
+  <div class="layer-title">☁️ Cloud — Kubernetes</div>
+  <div class="row">
+
+    <div class="box b-green">
+      <h3>telemetry-consumer <span class="tag t-py">Python</span></h3>
+      <p>sensor-telemetry 소비<br>→ InfluxDB 저장</p>
+    </div>
+
+    <div class="box b-green">
+      <h3>anomaly-consumer <span class="tag t-py">Python</span></h3>
+      <p>anomaly-events 소비<br>→ PostgreSQL 저장<br>→ 진단 요청 발행</p>
+    </div>
+
+    <div class="box b-teal" style="flex:1.4;">
+      <h3>fault-diagnosis-service <span class="tag t-ai">AI</span></h3>
+      <div class="badges">
+        <span class="badge bd-green">CausTR</span>
+        <span class="badge bd-green">CausReg</span>
+      </div>
+      <p style="margin-top:6px;">원인 변수 랭킹 → 진단 결과 발행</p>
+    </div>
+
+    <div class="box b-green" style="flex:1.6;">
+      <h3>monitoring-api <span class="tag t-java">Spring Boot</span></h3>
+      <p>Grafana REST API 제공<br>기계 제어 웹페이지 서빙</p>
+      <div style="margin-top:6px;font-size:10px;color:#4ade80;">
+        POST /api/machines/{id}/command<br>
+        <span style="color:#475569;">→ Edge HTTP 직접 호출</span>
+      </div>
+    </div>
+
+    <div class="box b-green">
+      <h3>notification-service <span class="tag t-java">Spring Boot</span></h3>
+      <p>FCM / APNs 푸시<br>WebSocket 알림</p>
+    </div>
+
+  </div>
+
+  <hr class="divider">
+
+  <div class="row">
+    <div class="box b-indigo">
+      <h3>📈 InfluxDB</h3>
+      <p>센서 이상 점수 시계열</p>
+    </div>
+    <div class="box b-indigo">
+      <h3>🗄 PostgreSQL</h3>
+      <p>이상 이벤트 · 진단 결과<br>기계 · 지점 메타데이터</p>
+    </div>
+    <div class="box b-slate">
+      <h3>🔴 Prometheus</h3>
+      <p>K8s 인프라 메트릭 수집</p>
+    </div>
+  </div>
+</div>
+
+<div class="arrows">
+  <span class="arr-down">↑ 이벤트 발행</span>
+  <span style="color:#334155;">─────────────────</span>
+  <span class="arr-down">↑ 텔레메트리 발행</span>
+</div>
+
+<!-- ─── KAFKA ─── -->
+<div class="layer L-kafka">
+  <div class="layer-title">📨 Apache Kafka — Message Broker</div>
+  <div class="row">
+    <div class="box b-purple">
+      <h3>sensor-telemetry</h3>
+      <p>30초 집계 이상 점수</p>
+    </div>
+    <div class="box b-purple">
+      <h3>anomaly-events</h3>
+      <p>이상 감지 즉시 발행</p>
+    </div>
+    <div class="box b-purple">
+      <h3>fault-diagnosis-requests</h3>
+      <p>원인 진단 트리거</p>
+    </div>
+    <div class="box b-purple">
+      <h3>fault-diagnosis-results</h3>
+      <p>진단 결과 수신</p>
+    </div>
+    <div class="box b-purple">
+      <h3>notification-events</h3>
+      <p>알림 발송 트리거</p>
+    </div>
+  </div>
+</div>
+
+<div class="arrows">
+  <span class="arr-down">↑ 데이터 발행</span>
+  <span class="arr-orange">↓ HTTP /command (기계 제어)</span>
+</div>
+
+<!-- ─── EDGE ─── -->
+<div class="layer L-edge">
+  <div class="layer-title">🔩 Edge — 각 공장 현장</div>
+  <div class="row">
+
+    <div class="box b-blue" style="flex:0 0 160px;">
+      <h3>🔧 CNC 선반</h3>
+      <p>OPC-UA / MQTT<br>89 features / 1초</p>
+    </div>
+
+    <div class="box b-blue" style="flex:2;">
+      <h3>LSTM Autoencoder <span class="tag t-ai">비지도학습</span></h3>
+      <div class="badges">
+        <span class="badge bd-blue">coolant · 3σ=0.0158</span>
+        <span class="badge bd-orange">hydraulics · 3σ=0.0287</span>
+        <span class="badge bd-purple">probe · 3σ=0.0262</span>
+      </div>
+      <p style="margin-top:6px;">재구성 오차 → 임계값 비교 → 이상 판정</p>
+    </div>
+
+    <div class="box b-blue">
+      <h3>Kafka Producer</h3>
+      <p>정상 → 30s 집계<br>이상 → 즉시 발행</p>
+    </div>
+
+    <div class="box b-blue" style="border-color:#ea580c;">
+      <h3>HTTP Command API <span class="tag t-new">NEW</span></h3>
+      <p>POST /command 수신<br>→ CNC 정지 / 재가동</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- 범례 -->
+<div class="legend">
+  <div class="lg"><div class="ld" style="background:#2563eb;"></div>Edge (Python · PyTorch)</div>
+  <div class="lg"><div class="ld" style="background:#7c3aed;"></div>Kafka</div>
+  <div class="lg"><div class="ld" style="background:#16a34a;"></div>Cloud 서비스</div>
+  <div class="lg"><div class="ld" style="background:#4f46e5;"></div>Database</div>
+  <div class="lg"><div class="ld" style="background:#ea580c;"></div>Grafana 대시보드</div>
+  <div class="lg"><div class="ld" style="background:#c2410c;"></div>신규 (기계 제어)</div>
+</div>
+
+</body>
+</html>

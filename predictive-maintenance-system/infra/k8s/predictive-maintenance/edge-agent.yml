@@ -1,0 +1,143 @@
+###############################################################################
+# edge-agent — CNC 기계별 1개 Pod (데모: 단일 Deployment)
+# 실제 다중 거점은 거점별 네임스페이스 or StatefulSet으로 분리
+###############################################################################
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: edge-agent-config
+  namespace: predictive-maintenance
+data:
+  SITE_ID: "site-A"
+  MACHINE_ID: "cnc-001"
+  DATA_REPLAY_MODE: "true"
+  DATA_REPLAY_SPEED_FACTOR: "10.0"
+  MODEL_VERSION: "v1.0.0"
+  DATA_PROCESSED_DATA_DIR: "/edge-agent/data/processed_data_v2"
+  DATA_REPLAY_CSV_DIR: "/edge-agent/data/real_op"
+  MODEL_DIR: "/edge-agent/models"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-agent
+  namespace: predictive-maintenance
+  labels:
+    app: edge-agent
+spec:
+  replicas: 1          # 기계 1대 = Pod 1개
+  selector:
+    matchLabels:
+      app: edge-agent
+  template:
+    metadata:
+      labels:
+        app: edge-agent
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8000"
+    spec:
+      containers:
+        - name: edge-agent
+          image: edge-agent:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: edge-agent-config
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: common-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          volumeMounts:
+            - name: models
+              mountPath: /edge-agent/models
+              readOnly: true
+            - name: processed-data
+              mountPath: /edge-agent/data/processed_data_v2
+              readOnly: true
+            - name: replay-data
+              mountPath: /edge-agent/data/real_op
+              readOnly: true
+      volumes:
+        # PVC로 모델/데이터 마운트 (클러스터 배포 시 PV 프로비저닝 필요)
+        - name: models
+          persistentVolumeClaim:
+            claimName: edge-models-pvc
+        - name: processed-data
+          persistentVolumeClaim:
+            claimName: edge-processed-data-pvc
+        - name: replay-data
+          persistentVolumeClaim:
+            claimName: edge-replay-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge-agent
+  namespace: predictive-maintenance
+spec:
+  selector:
+    app: edge-agent
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+# 로컬(minikube/kind) 개발용 PVC — hostPath 백엔드
+# 실제 클라우드는 StorageClass 변경
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: edge-models-pvc
+  namespace: predictive-maintenance
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: edge-processed-data-pvc
+  namespace: predictive-maintenance
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: edge-replay-data-pvc
+  namespace: predictive-maintenance
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 10Gi
