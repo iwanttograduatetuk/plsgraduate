@@ -2,3 +2,4 @@
 .venv/
 predictive-maintenance-system/edge-agent/.venv/.gradle/
 build/
+infra/.env

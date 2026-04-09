@@ -203,9 +203,9 @@ services:
       MODEL_DIR: /edge-agent/models
     volumes:
       # 실제 모델 파일 및 데이터 마운트
-      - C:\Users\o\Desktop\graduate\plsgraduate\dataset_causRCA\anomaly_detection\models_lstm:/edge-agent/models:ro
-      - C:\Users\o\Desktop\graduate\plsgraduate\dataset_causRCA\anomaly_detection\processed_data_v2:/edge-agent/data/processed_data_v2:ro
-      - C:\Users\o\Desktop\graduate\plsgraduate\dataset_causRCA\real_op:/edge-agent/data/real_op:ro
+      - ${DATASET_BASE_PATH}/anomaly_detection/models_lstm:/edge-agent/models:ro
+      - ${DATASET_BASE_PATH}/anomaly_detection/processed_data_v2:/edge-agent/data/processed_data_v2:ro
+      - ${DATASET_BASE_PATH}/real_op:/edge-agent/data/real_op:ro
     restart: unless-stopped
 
   telemetry-consumer:
