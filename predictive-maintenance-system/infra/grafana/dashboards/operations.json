@@ -89,7 +89,7 @@
       "id": 7,
       "options": {
         "mode": "html",
-        "content": "<iframe src=\"http://localhost:8082/control.html\" width=\"100%\" height=\"100%\" frameborder=\"0\" style=\"min-height:480px; border-radius:4px;\"></iframe>"
+        "content": "<iframe src=\"http://34.64.49.175:8082/control.html\" width=\"100%\" height=\"100%\" frameborder=\"0\" style=\"min-height:480px; border-radius:4px;\"></iframe>"
       }
     }
   ],
