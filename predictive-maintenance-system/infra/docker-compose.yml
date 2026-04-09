@@ -267,7 +267,10 @@ services:
     restart: unless-stopped
 
   notification-service:
-    image: notification-service:latest   # Gradle로 빌드 후 태그 필요
+    build:
+      context: ../cloud/notification-service
+      dockerfile: Dockerfile
+    image: notification-service:latest
     container_name: notification-service
     networks: [pm-net]
     depends_on:
@@ -285,7 +288,10 @@ services:
     restart: unless-stopped
 
   monitoring-api:
-    image: monitoring-api:latest         # Gradle로 빌드 후 태그 필요
+    build:
+      context: ../cloud/monitoring-api
+      dockerfile: Dockerfile
+    image: monitoring-api:latest
     container_name: monitoring-api
     networks: [pm-net]
     depends_on:
