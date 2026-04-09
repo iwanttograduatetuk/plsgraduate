@@ -201,6 +201,7 @@ services:
       DATA_PROCESSED_DATA_DIR: /edge-agent/data/processed_data_v2
       DATA_REPLAY_CSV_DIR: /edge-agent/data/real_op
       MODEL_DIR: /edge-agent/models
+      REPLAY_AUTO_START: ${REPLAY_AUTO_START:-false}
     volumes:
       # 실제 모델 파일 및 데이터 마운트
       - ${DATASET_BASE_PATH}/anomaly_detection/models_lstm:/edge-agent/models:ro

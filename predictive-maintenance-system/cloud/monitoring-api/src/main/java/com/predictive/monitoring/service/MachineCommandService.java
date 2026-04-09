@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
@@ -92,6 +93,7 @@ public class MachineCommandService {
             );
             restClient.post()
                     .uri(edgeBaseUrl + "/command")
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
                     .toBodilessEntity();

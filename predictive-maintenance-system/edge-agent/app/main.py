@@ -52,8 +52,9 @@ _inference_count: int = 0
 _anomaly_count: int = 0
 _last_telemetry_time: float = 0.0
 
-# 기계 제어 상태
-_machine_paused: bool = True    # 시작 시 일시 중단 상태 (재개 버튼으로 데이터 주입 시작)
+# 기계 제어 상태 (REPLAY_AUTO_START=true 환경변수로 자동 시작 가능)
+import os
+_machine_paused: bool = os.environ.get("REPLAY_AUTO_START", "false").lower() != "true"
 
 
 # ── 기계 제어 DTO ──────────────────────────────────────────────────────────────
