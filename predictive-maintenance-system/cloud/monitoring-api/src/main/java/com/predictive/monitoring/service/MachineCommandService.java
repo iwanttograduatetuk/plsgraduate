@@ -14,6 +14,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -93,14 +97,18 @@ public class MachineCommandService {
                     "reason",     reason != null ? reason : ""
             );
             String json = new ObjectMapper().writeValueAsString(body);
-            restClient.post()
-                    .uri(edgeBaseUrl + "/command")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(json)
-                    .retrieve()
-                    .toBodilessEntity();
-            log.info("Edge 명령 전송 성공: {} → {}", machineId, command);
-            return "ok";
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(edgeBaseUrl + "/command"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+            HttpResponse<String> response = HttpClient.newHttpClient()
+                    .send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                log.info("Edge 명령 전송 성공: {} → {}", machineId, command);
+                return "ok";
+            }
+            throw new RuntimeException(response.statusCode() + ": " + response.body());
         } catch (Exception e) {
             log.warn("Edge 명령 전송 실패 (오프라인?): {} — {}", machineId, e.getMessage());
             return "edge_offline";
