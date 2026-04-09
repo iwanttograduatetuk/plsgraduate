@@ -1,8 +1,15 @@
+FROM eclipse-temurin:21-jdk-jammy AS builder
+WORKDIR /app
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
+COPY src src
+RUN chmod +x gradlew && ./gradlew bootJar -x test --no-daemon
+
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
-
-# Gradle wrapper로 빌드된 JAR 복사
-COPY build/libs/*.jar app.jar
+COPY --from=builder /app/build/libs/*.jar app.jar
 
 ENV PORT=8080 \
     KAFKA_BOOTSTRAP_SERVERS=kafka:9092 \
