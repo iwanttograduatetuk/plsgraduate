@@ -102,7 +102,9 @@ public class MachineCommandService {
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(json))
                     .build();
-            HttpResponse<String> response = HttpClient.newHttpClient()
+            HttpResponse<String> response = HttpClient.newBuilder()
+                    .version(HttpClient.Version.HTTP_1_1)
+                    .build()
                     .send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 log.info("Edge 명령 전송 성공: {} → {}", machineId, command);
