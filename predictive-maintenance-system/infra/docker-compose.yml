@@ -15,7 +15,6 @@
 #   Monitoring API http://localhost:8082
 ###############################################################################
 
-version: '3.9'
 
 networks:
   pm-net:
@@ -165,6 +164,18 @@ services:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/var/lib/grafana/dashboards
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:latest
+    container_name: kafka-exporter
+    networks: [pm-net]
+    command: --kafka.server=kafka:9092 --kafka.version=2.6.0
+    ports:
+      - "9308:9308"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
 
   # ── Python 마이크로서비스 ──────────────────────────────────────────────────
 

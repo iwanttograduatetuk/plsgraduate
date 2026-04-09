@@ -1,0 +1,117 @@
+{
+  "annotations": { "list": [] },
+  "description": "CNC 예지보전 — 경영진용 KPI 현황",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "총 이상 감지 (미처리)",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE is_resolved = false", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "긴급(CRITICAL) 이상",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE severity='CRITICAL' AND is_resolved=false", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "전체 기계 대수",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "blue" } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "rawSql": "SELECT COUNT(*) AS value FROM machines", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "오늘 이상 발생 건수",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 10 }, { "color": "red", "value": 50 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE detected_at >= NOW() - INTERVAL '24 hours'", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "piechart",
+      "title": "심각도별 이상 분포",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 5 },
+      "id": 5,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "pieType": "donut", "legend": { "displayMode": "table", "placement": "right" } },
+      "targets": [{ "rawSql": "SELECT severity AS metric, COUNT(*) AS value FROM anomaly_events WHERE is_resolved=false GROUP BY severity", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "piechart",
+      "title": "서브시스템별 이상 분포",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 5 },
+      "id": 6,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "pieType": "donut", "legend": { "displayMode": "table", "placement": "right" } },
+      "targets": [{ "rawSql": "SELECT subsystem AS metric, COUNT(*) AS value FROM anomaly_events WHERE is_resolved=false GROUP BY subsystem", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "piechart",
+      "title": "기계별 이상 분포",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 5 },
+      "id": 7,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "pieType": "donut", "legend": { "displayMode": "table", "placement": "right" } },
+      "targets": [{ "rawSql": "SELECT machine_id AS metric, COUNT(*) AS value FROM anomaly_events WHERE is_resolved=false GROUP BY machine_id", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "시간대별 이상 발생 추이",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 13 },
+      "id": 8,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": { "defaults": { "custom": { "lineWidth": 2, "fillOpacity": 15 } } },
+      "options": { "tooltip": { "mode": "multi" } },
+      "targets": [{ "rawSql": "SELECT date_trunc('minute', detected_at) AS time, COUNT(*) AS value FROM anomaly_events WHERE detected_at >= NOW() - INTERVAL '1 hour' GROUP BY 1 ORDER BY 1", "format": "time_series", "refId": "A" }]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["CNC", "예지보전", "executive"],
+  "time": { "from": "now-24h", "to": "now" },
+  "timezone": "browser",
+  "title": "1. Executive — KPI 현황",
+  "uid": "cnc-executive",
+  "version": 1
+}

@@ -1,0 +1,104 @@
+{
+  "annotations": { "list": [] },
+  "description": "CNC 예지보전 — 운영자용 실시간 모니터링 및 기계 제어",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "미처리 이상",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "id": 1,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE is_resolved=false", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "CRITICAL 건수",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "id": 2,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE severity='CRITICAL' AND is_resolved=false", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "최근 1분 이상 건수",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "id": 3,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 20 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE detected_at >= NOW() - INTERVAL '1 minute'", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "처리 완료 건수",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "id": 4,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE is_resolved=true", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "table",
+      "title": "실시간 이상 이벤트",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 4 },
+      "id": 5,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": {
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "심각도" }, "properties": [{ "id": "custom.width", "value": 100 }, { "id": "color", "value": { "mode": "thresholds" } }, { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0 }] } }] },
+          { "matcher": { "id": "byName", "options": "처리완료" }, "properties": [{ "id": "custom.width", "value": 90 }] }
+        ]
+      },
+      "options": { "showHeader": true, "sortBy": [{ "displayName": "감지시각", "desc": true }], "footer": { "show": false } },
+      "targets": [{ "rawSql": "SELECT detected_at AS \"감지시각\", site_id AS \"지점\", machine_id AS \"기계\", subsystem AS \"서브시스템\", ROUND(anomaly_score::numeric, 3) AS \"이상점수\", severity AS \"심각도\", is_resolved AS \"처리완료\" FROM anomaly_events ORDER BY detected_at DESC LIMIT 100", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "row",
+      "title": "CNC 기계 제어",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "id": 6,
+      "collapsed": false
+    },
+    {
+      "type": "text",
+      "title": "CNC 기계 제어 패널",
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 17 },
+      "id": 7,
+      "options": {
+        "mode": "html",
+        "content": "<iframe src=\"http://localhost:8082/control.html\" width=\"100%\" height=\"100%\" frameborder=\"0\" style=\"min-height:480px; border-radius:4px;\"></iframe>"
+      }
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": ["CNC", "예지보전", "operations"],
+  "time": { "from": "now-30m", "to": "now" },
+  "timezone": "browser",
+  "title": "2. Operations — 실시간 운영",
+  "uid": "cnc-operations",
+  "version": 1
+}

@@ -1,0 +1,111 @@
+{
+  "annotations": { "list": [] },
+  "description": "CNC 예지보전 — 엔지니어용 AI 분석 상세",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "panels": [
+    {
+      "type": "row",
+      "title": "LSTM 재구성 오차 시계열",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Hydraulics 재구성 오차",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 1 },
+      "id": 2,
+      "datasource": { "type": "influxdb", "uid": "InfluxDB" },
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2, "fillOpacity": 10 }, "color": { "mode": "palette-classic" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "threshold" }, "properties": [{ "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [5, 5] } }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{ "query": "from(bucket: \"sensor-scores\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"subsystem_scores\")\n  |> filter(fn: (r) => r[\"site_id\"] == \"site-A\")\n  |> filter(fn: (r) => r[\"machine_id\"] == \"cnc-001\")\n  |> filter(fn: (r) => r[\"subsystem\"] == \"hydraulics\")\n  |> filter(fn: (r) => r[\"_field\"] == \"reconstruction_error\" or r[\"_field\"] == \"threshold\")\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Coolant 재구성 오차",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 1 },
+      "id": 3,
+      "datasource": { "type": "influxdb", "uid": "InfluxDB" },
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2, "fillOpacity": 10 }, "color": { "mode": "palette-classic" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "threshold" }, "properties": [{ "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [5, 5] } }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{ "query": "from(bucket: \"sensor-scores\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"subsystem_scores\")\n  |> filter(fn: (r) => r[\"site_id\"] == \"site-A\")\n  |> filter(fn: (r) => r[\"machine_id\"] == \"cnc-001\")\n  |> filter(fn: (r) => r[\"subsystem\"] == \"coolant\")\n  |> filter(fn: (r) => r[\"_field\"] == \"reconstruction_error\" or r[\"_field\"] == \"threshold\")\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Probe 재구성 오차",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 1 },
+      "id": 4,
+      "datasource": { "type": "influxdb", "uid": "InfluxDB" },
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2, "fillOpacity": 10 }, "color": { "mode": "palette-classic" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "threshold" }, "properties": [{ "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [5, 5] } }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{ "query": "from(bucket: \"sensor-scores\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"subsystem_scores\")\n  |> filter(fn: (r) => r[\"site_id\"] == \"site-A\")\n  |> filter(fn: (r) => r[\"machine_id\"] == \"cnc-001\")\n  |> filter(fn: (r) => r[\"subsystem\"] == \"probe\")\n  |> filter(fn: (r) => r[\"_field\"] == \"reconstruction_error\" or r[\"_field\"] == \"threshold\")\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")", "refId": "A" }]
+    },
+    {
+      "type": "row",
+      "title": "Root Cause Analysis",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "id": 5,
+      "collapsed": false
+    },
+    {
+      "type": "barchart",
+      "title": "Root Cause 상위 변수 (최근 이상 이벤트)",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 10 },
+      "id": 6,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "options": { "orientation": "horizontal", "xTickLabelRotation": 0, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{ "rawSql": "SELECT rc->>'variable' AS variable, ROUND((rc->>'score')::numeric, 3) AS score FROM fault_diagnosis_results, jsonb_array_elements(root_causes) rc ORDER BY diagnosed_at DESC, score DESC LIMIT 10", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "table",
+      "title": "Fault Diagnosis 결과 이력",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 10 },
+      "id": 7,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "options": { "showHeader": true, "sortBy": [{ "displayName": "진단시각", "desc": true }] },
+      "targets": [{ "rawSql": "SELECT fdr.diagnosed_at AS \"진단시각\", ae.site_id AS \"지점\", ae.machine_id AS \"기계\", ae.subsystem AS \"서브시스템\", fdr.model_name AS \"모델\", ROUND(fdr.confidence::numeric, 3) AS \"신뢰도\", fdr.root_causes->0->>'variable' AS \"원인1위\" FROM fault_diagnosis_results fdr JOIN anomaly_events ae ON fdr.event_id = ae.event_id ORDER BY fdr.diagnosed_at DESC LIMIT 50", "format": "table", "refId": "A" }]
+    },
+    {
+      "type": "row",
+      "title": "서브시스템별 이상 점수 추이",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 20 },
+      "id": 8,
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "서브시스템별 이상 점수 (시간대)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 21 },
+      "id": 9,
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "fieldConfig": { "defaults": { "custom": { "lineWidth": 2, "fillOpacity": 5 } } },
+      "options": { "tooltip": { "mode": "multi" } },
+      "targets": [{ "rawSql": "SELECT date_trunc('minute', detected_at) AS time, subsystem AS metric, AVG(anomaly_score) AS value FROM anomaly_events WHERE detected_at >= NOW() - INTERVAL '1 hour' GROUP BY 1, 2 ORDER BY 1", "format": "time_series", "refId": "A" }]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": ["CNC", "예지보전", "engineering", "AI"],
+  "time": { "from": "now-30m", "to": "now" },
+  "timezone": "browser",
+  "title": "3. Engineering — AI 분석 상세",
+  "uid": "cnc-engineering",
+  "version": 1
+}

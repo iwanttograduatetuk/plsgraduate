@@ -1,0 +1,218 @@
+{
+  "annotations": { "list": [] },
+  "description": "CNC 예지보전 — 인프라 및 서비스 모니터링",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "서비스 UP 수",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 3 }, { "color": "green", "value": 5 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "expr": "count(up == 1)", "legendFormat": "UP", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "monitoring-api CPU",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 80 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "expr": "process_cpu_usage{job=\"monitoring-api\"} * 100", "legendFormat": "CPU%", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "JVM 힙 사용량",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "bytes", "color": { "mode": "fixed", "fixedColor": "blue" } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "expr": "sum(jvm_memory_used_bytes{area=\"heap\", job=\"monitoring-api\"})", "legendFormat": "Heap", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "HTTP RPS",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps", "color": { "mode": "fixed", "fixedColor": "green" } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count{job=\"monitoring-api\"}[1m]))", "legendFormat": "RPS", "refId": "A" }]
+    },
+    {
+      "type": "row",
+      "title": "서비스 상태",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 4 },
+      "id": 5,
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU 사용률 (%)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "id": 6,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 90 }] }
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" } },
+      "targets": [{ "expr": "process_cpu_usage{job=~\"monitoring-api|notification-service\"} * 100", "legendFormat": "{{job}}", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "JVM 힙 메모리 사용량",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "id": 7,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "lineWidth": 2, "fillOpacity": 8 } } },
+      "options": { "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "jvm_memory_used_bytes{area=\"heap\", job=~\"monitoring-api|notification-service\"}", "legendFormat": "{{job}} {{id}} used", "refId": "A" },
+        { "expr": "jvm_memory_max_bytes{area=\"heap\", job=~\"monitoring-api|notification-service\"}", "legendFormat": "{{job}} max", "refId": "B" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "HTTP 메트릭",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "id": 8,
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP 요청 처리율 (rps)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "id": 9,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 8 } } },
+      "options": { "tooltip": { "mode": "multi" } },
+      "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count{job=\"monitoring-api\"}[1m])) by (uri)", "legendFormat": "{{uri}}", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP 평균 응답 지연 (ms)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "id": 10,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 200 }, { "color": "red", "value": 500 }] }
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" } },
+      "targets": [{ "expr": "rate(http_server_requests_seconds_sum{job=\"monitoring-api\"}[1m]) / rate(http_server_requests_seconds_count{job=\"monitoring-api\"}[1m]) * 1000", "legendFormat": "avg latency", "refId": "A" }]
+    },
+    {
+      "type": "row",
+      "title": "Kafka Consumer Lag",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+      "id": 11,
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Consumer Group Lag (적재량)",
+      "gridPos": { "h": 9, "w": 16, "x": 0, "y": 23 },
+      "id": 12,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "lineWidth": 2, "fillOpacity": 10 },
+          "color": { "mode": "palette-classic" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 100 }, { "color": "red", "value": 500 }] }
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "bottom" } },
+      "targets": [{ "expr": "sum(kafka_consumergroup_lag) by (consumergroup)", "legendFormat": "{{consumergroup}}", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "총 Lag",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 23 },
+      "id": 13,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 100 }, { "color": "red", "value": 500 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "expr": "sum(kafka_consumergroup_lag)", "legendFormat": "Total Lag", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "토픽 수",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 27 },
+      "id": 14,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "blue" } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [{ "expr": "count(count(kafka_topic_partitions) by (topic))", "legendFormat": "Topics", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "토픽별 파티션 오프셋",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 },
+      "id": 15,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "custom": { "lineWidth": 2, "fillOpacity": 5 }, "color": { "mode": "palette-classic" } } },
+      "options": { "tooltip": { "mode": "multi" } },
+      "targets": [{ "expr": "sum(kafka_topic_partition_current_offset) by (topic)", "legendFormat": "{{topic}}", "refId": "A" }]
+    },
+    {
+      "type": "row",
+      "title": "서비스 헬스",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 },
+      "id": 16,
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "서비스 UP/DOWN 상태",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 41 },
+      "id": 17,
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "lineWidth": 2 },
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" } },
+      "targets": [{ "expr": "up", "legendFormat": "{{job}}", "refId": "A" }]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["CNC", "예지보전", "infra", "DevOps"],
+  "time": { "from": "now-30m", "to": "now" },
+  "timezone": "browser",
+  "title": "4. Infra — 인프라 모니터링",
+  "uid": "cnc-infra",
+  "version": 1
+}
