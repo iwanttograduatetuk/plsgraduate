@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
@@ -91,10 +92,11 @@ public class MachineCommandService {
                     "command",    command,
                     "reason",     reason != null ? reason : ""
             );
+            String json = new ObjectMapper().writeValueAsString(body);
             restClient.post()
                     .uri(edgeBaseUrl + "/command")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(body)
+                    .body(json)
                     .retrieve()
                     .toBodilessEntity();
             log.info("Edge 명령 전송 성공: {} → {}", machineId, command);
