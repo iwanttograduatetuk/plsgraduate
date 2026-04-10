@@ -1,0 +1,70 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: predictive-maintenance
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anomaly-consumer
+  namespace: predictive-maintenance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: anomaly-consumer
+  template:
+    metadata:
+      labels:
+        app: anomaly-consumer
+    spec:
+      containers:
+        - name: anomaly-consumer
+          image: docker.io/library/infra-anomaly-consumer:latest
+          imagePullPolicy: Never
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "10.178.0.2:9092"
+            - name: DATABASE_URL
+              value: "postgresql://cnc_user:cnc_password@10.178.0.2:5432/predictive_maintenance"
+            - name: INFLUXDB_URL
+              value: "http://10.178.0.2:8086"
+            - name: INFLUXDB_TOKEN
+              value: "cnc-token-secret"
+            - name: INFLUXDB_ORG
+              value: "cnc-org"
+            - name: INFLUXDB_BUCKET
+              value: "cnc-metrics"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: anomaly-consumer-scaledobject
+  namespace: predictive-maintenance
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: anomaly-consumer
+  minReplicaCount: 1
+  maxReplicaCount: 5
+  cooldownPeriod: 30
+  pollingInterval: 10
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: "10.178.0.2:9092"
+        consumerGroup: anomaly-consumer-group
+        topic: anomaly-events
+        lagThreshold: "5"
+        offsetResetPolicy: latest

@@ -12,8 +12,8 @@ metadata:
 data:
   KAFKA_BOOTSTRAP_SERVERS: "kafka.kafka.svc.cluster.local:9092"
   INFLUXDB_URL: "http://influxdb.monitoring.svc.cluster.local:8086"
-  INFLUXDB_ORG: "predictive-maintenance"
-  INFLUXDB_BUCKET: "sensor-scores"
+  INFLUXDB_ORG: "cnc-org"
+  INFLUXDB_BUCKET: "cnc-metrics"
   LOG_LEVEL: "INFO"
   EDGE_BASE_URL: "http://edge-agent.predictive-maintenance.svc.cluster.local:8000"
 ---
@@ -24,8 +24,8 @@ metadata:
   namespace: predictive-maintenance
 type: Opaque
 stringData:
-  postgres-url: "postgresql+asyncpg://postgres:postgres@postgres.predictive-maintenance.svc.cluster.local:5432/predictive_maintenance"
+  postgres-url: "postgresql+asyncpg://cnc_user:cnc_password@postgres.predictive-maintenance.svc.cluster.local:5432/predictive_maintenance"
   postgres-jdbc-url: "jdbc:postgresql://postgres.predictive-maintenance.svc.cluster.local:5432/predictive_maintenance"
-  postgres-user: "postgres"
-  postgres-password: "postgres"
-  influxdb-token: "my-token-change-in-production"
+  postgres-user: "cnc_user"
+  postgres-password: "cnc_password"
+  influxdb-token: "cnc-token-secret"

@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: telemetry-consumer
-          image: telemetry-consumer:latest
+          image: asia-northeast3-docker.pkg.dev/cnc-predictive/cnc-registry/telemetry-consumer:latest
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
@@ -64,7 +64,7 @@ spec:
     spec:
       containers:
         - name: anomaly-consumer
-          image: anomaly-consumer:latest
+          image: asia-northeast3-docker.pkg.dev/cnc-predictive/cnc-registry/anomaly-consumer:latest
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
@@ -105,7 +105,7 @@ spec:
     spec:
       containers:
         - name: fault-diagnosis-service
-          image: fault-diagnosis-service:latest
+          image: asia-northeast3-docker.pkg.dev/cnc-predictive/cnc-registry/fault-diagnosis-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8001
@@ -166,7 +166,7 @@ spec:
     spec:
       containers:
         - name: notification-service
-          image: notification-service:latest
+          image: asia-northeast3-docker.pkg.dev/cnc-predictive/cnc-registry/notification-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -258,7 +258,7 @@ spec:
     spec:
       containers:
         - name: monitoring-api
-          image: monitoring-api:latest
+          image: asia-northeast3-docker.pkg.dev/cnc-predictive/cnc-registry/monitoring-api:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8082
