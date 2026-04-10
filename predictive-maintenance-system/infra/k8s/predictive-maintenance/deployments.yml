@@ -373,6 +373,13 @@ spec:
       labels:
         app: postgres
     spec:
+      initContainers:
+        - name: remove-lost-found
+          image: busybox
+          command: ['sh', '-c', 'rm -rf /var/lib/postgresql/data/lost+found']
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
       containers:
         - name: postgres
           image: postgres:17-alpine
