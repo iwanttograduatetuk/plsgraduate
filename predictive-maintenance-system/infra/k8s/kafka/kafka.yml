@@ -24,6 +24,8 @@ spec:
       labels:
         app: zookeeper
     spec:
+      securityContext:
+        fsGroup: 1000
       containers:
         - name: zookeeper
           image: confluentinc/cp-zookeeper:7.7.1
@@ -72,6 +74,8 @@ spec:
       labels:
         app: kafka
     spec:
+      securityContext:
+        fsGroup: 1000
       containers:
         - name: kafka
           image: confluentinc/cp-kafka:7.7.1
