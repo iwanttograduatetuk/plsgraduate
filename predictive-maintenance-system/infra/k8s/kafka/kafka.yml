@@ -65,7 +65,7 @@ metadata:
   namespace: kafka
 spec:
   serviceName: kafka
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: kafka
@@ -102,7 +102,7 @@ spec:
             - name: KAFKA_ADVERTISED_LISTENERS
               value: "PLAINTEXT://$(POD_NAME).kafka.kafka.svc.cluster.local:9092"
             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
-              value: "3"
+              value: "1"
             - name: KAFKA_LOG_RETENTION_HOURS
               value: "168"
             - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
