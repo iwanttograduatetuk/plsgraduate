@@ -1,0 +1,33 @@
+{
+  "Hyd_Temp_lt_70": {
+    "threshold": 70,
+    "unit": "\u00b0C",
+    "condition": "temp < 70\u00b0C \u2192 True"
+  },
+  "Hyd_Temp_lt_80": {
+    "threshold": 80,
+    "unit": "\u00b0C",
+    "condition": "temp < 80\u00b0C \u2192 True"
+  },
+  "CLT_Level_lt_Min": {
+    "threshold": "min_level",
+    "unit": "level",
+    "condition": "level < min \u2192 True (fault)"
+  },
+  "M_ErrorActive": {
+    "threshold": "any_error",
+    "condition": "any alarm active \u2192 True"
+  },
+  "SL_Red": {
+    "threshold": "error_state",
+    "condition": "fault/stop \u2192 True"
+  },
+  "SL_Yellow": {
+    "threshold": "warning_state",
+    "condition": "warning present \u2192 True"
+  },
+  "SL_Green": {
+    "threshold": "all_ok",
+    "condition": "all OK \u2192 True"
+  }
+}

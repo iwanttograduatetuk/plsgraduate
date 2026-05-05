@@ -48,7 +48,8 @@ class KafkaConfig(BaseSettings):
         default="localhost:9092",
         description="Kafka 브로커 주소 (쉼표로 구분한 여러 개 가능)",
     )
-    topic_anomaly_events: str = Field(default="anomaly-events")
+    topic_anomaly_critical: str = Field(default="anomaly-events-critical")
+    topic_anomaly_low: str = Field(default="anomaly-events-low")
     topic_sensor_telemetry: str = Field(default="sensor-telemetry")
 
     # Producer 설정
@@ -95,6 +96,7 @@ class AgentConfig(BaseSettings):
 
     site_id: str = Field(default="site-A", description="지점 식별자")
     machine_id: str = Field(default="cnc-001", description="기계 식별자")
+    replay_auto_start: bool = Field(default=True, description="True면 시작 시 자동으로 RUNNING 상태")
 
     # FastAPI 서버
     host: str = Field(default="0.0.0.0")

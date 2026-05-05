@@ -1,0 +1,1221 @@
+{
+  "subsystem": "hydraulics",
+  "top_event": "HYDRAULICS_SYSTEM_FAULT",
+  "experiments": [
+    {
+      "exp_id": "exp_10",
+      "group": "hydraulics"
+    },
+    {
+      "exp_id": "exp_12",
+      "group": "hydraulics"
+    },
+    {
+      "exp_id": "exp_13",
+      "group": "hydraulics"
+    },
+    {
+      "exp_id": "exp_14",
+      "group": "hydraulics"
+    },
+    {
+      "exp_id": "exp_15",
+      "group": "hydraulics"
+    },
+    {
+      "exp_id": "exp_18",
+      "group": "hydraulics"
+    },
+    {
+      "exp_id": "exp_20",
+      "group": "hydraulics"
+    },
+    {
+      "exp_id": "exp_8",
+      "group": "hydraulics"
+    },
+    {
+      "exp_id": "exp_9",
+      "group": "hydraulics"
+    }
+  ],
+  "fault_scenarios": [
+    {
+      "exp_id": "exp_10",
+      "description": "Due to a defective cooler, oil temperature rises continuously at varying rates across runs until it exceeds the threshold; high‑temperature alarms are triggered.",
+      "root_causes": [
+        "Hyd_Temp_lt_70",
+        "Hyd_Temp_lt_80"
+      ],
+      "triggered_alarms": [
+        "Hyd_A_700203",
+        "Hyd_A_700204"
+      ],
+      "diagnoses": [
+        "Hydraulic oil cooler defective."
+      ]
+    },
+    {
+      "exp_id": "exp_12",
+      "description": "Oil level falls continuously due to a leak, eventually dropping below the threshold and low‑level alarms are triggered.",
+      "root_causes": [
+        "Hyd_Level_Ok"
+      ],
+      "triggered_alarms": [
+        "Hyd_A_700205",
+        "Hyd_A_700206"
+      ],
+      "diagnoses": [
+        "Leakage in hydraulics system"
+      ]
+    },
+    {
+      "exp_id": "exp_13",
+      "description": "The hydraulic pump motor fails spontaneously during operation, causing condition monitoring to trigger.",
+      "root_causes": [
+        "Hyd_Pump_Ok"
+      ],
+      "triggered_alarms": [
+        "Hyd_A_700208"
+      ],
+      "diagnoses": [
+        "Hydraulic pump motor fails"
+      ]
+    },
+    {
+      "exp_id": "exp_14",
+      "description": "A hydraulic leak develops. First, a warning for low oil level is issued. Hydraulic pressure then continuously drops until its threshold is also breached.  Both values eventually fall below limits, triggering multiple fault alarms.",
+      "root_causes": [
+        "Hyd_Level_Ok",
+        "Hyd_Pressure"
+      ],
+      "triggered_alarms": [
+        "Hyd_A_700202",
+        "Hyd_A_700205",
+        "Hyd_A_700206"
+      ],
+      "diagnoses": [
+        "Leakage in hydraulics system"
+      ]
+    },
+    {
+      "exp_id": "exp_15",
+      "description": "A developing  cooling issues causes oil temperature to rise above 70°C, triggering a temperature warning. Hydraulic pressure then begins to drop, while the temperature continues to rise. In some runs, the pressure drops first; in others, the oil temperature exceeds the critical 80°C threshold first. Eventually, both conditions breach their respective limits, triggering fault alarms. The operator acknowledges the errors and terminates the experiment.",
+      "root_causes": [
+        "Hyd_Temp_lt_70",
+        "Hyd_Temp_lt_80",
+        "Hyd_Pressure"
+      ],
+      "triggered_alarms": [
+        "Hyd_A_700202",
+        "Hyd_A_700203",
+        "Hyd_A_700204"
+      ],
+      "diagnoses": [
+        "Leakage in hydraulics system",
+        "Hydraulic oil cooler defective."
+      ]
+    },
+    {
+      "exp_id": "exp_18",
+      "description": "Due to Leakage the oil level begins to fall continuously, eventually leading to motor failure.",
+      "root_causes": [
+        "Hyd_Level_Ok",
+        "Hyd_Pump_Ok"
+      ],
+      "triggered_alarms": [
+        "Hyd_A_700205",
+        "Hyd_A_700206",
+        "Hyd_A_700208"
+      ],
+      "diagnoses": [
+        "Leakage in hydraulics system",
+        "Hydraulic pump motor fails"
+      ]
+    },
+    {
+      "exp_id": "exp_20",
+      "description": "Contamination in the system causes the return filter to become progressively blocked, increasing back pressure. Eventually, this results in hydraulic motor failure.",
+      "root_causes": [
+        "Hyd_Filter_Ok",
+        "Hyd_Pump_Ok"
+      ],
+      "triggered_alarms": [
+        "Hyd_A_700207",
+        "Hyd_A_700208"
+      ],
+      "diagnoses": [
+        "Hydraulics flow obstructed by clogged filter."
+      ]
+    },
+    {
+      "exp_id": "exp_8",
+      "description": "A leak causes hydraulic pressure to fall continuously; once pressure drops below the threshold (Hyd_Pressure < ca. 6600), the system detects a low‑pressure fault and raises an alarm.",
+      "root_causes": [
+        "Hyd_Pressure"
+      ],
+      "triggered_alarms": [
+        "Hyd_A_700202"
+      ],
+      "diagnoses": [
+        "Leakage in hydraulics system"
+      ]
+    },
+    {
+      "exp_id": "exp_9",
+      "description": "The defective pressure‑level sensor outputs random values outside the normal range—spiking both above and below the true pressure—until it falsely triggers a pressure fault alarm. Operator acknowledges the fault and terminates the experiment.",
+      "root_causes": [
+        "Hyd_Pressure"
+      ],
+      "triggered_alarms": [
+        "Hyd_A_700202"
+      ],
+      "diagnoses": [
+        "Hyd_Pressure Sensor is defective."
+      ]
+    }
+  ],
+  "causal_chains": [
+    {
+      "root_cause": "Hyd_Temp_lt_70",
+      "propagation": [
+        {
+          "from": "Hyd_Temp_lt_70",
+          "to": "Hyd_A_700203",
+          "mechanism": "Hyd_Temp_Warning_Monitoring",
+          "description": "When Hyd_Temp_lt_70=False (temp >= 70°C) -> Warning 700203 is triggered"
+        },
+        {
+          "from": "Hyd_Temp_lt_70",
+          "to": "Hyd_Temp_lt_80",
+          "mechanism": "Hyd_Temp_70_to_80",
+          "description": "Temperature above 70 degree is reached before 80 degree (common unobserved confounder)"
+        },
+        {
+          "from": "Hyd_A_700203",
+          "to": "M_WarnActive",
+          "mechanism": "Hyd_A_700203_to_WarnActive",
+          "description": "High hydraulic temperature warning triggers a general warning state."
+        },
+        {
+          "from": "Hyd_Temp_lt_80",
+          "to": "Hyd_A_700204",
+          "mechanism": "Hyd_Temp_Alarm_Monitoring",
+          "description": "When Hyd_Temp_lt_80=False (temp >= 80°C) -> Alarm 700204 is triggered"
+        },
+        {
+          "from": "M_WarnActive",
+          "to": "SL_Yellow",
+          "mechanism": "WarnActive_to_SL_Yellow",
+          "description": "A general warning can affect the yellow light state (e.g., blinking)."
+        },
+        {
+          "from": "Hyd_A_700204",
+          "to": "Hyd_IsEnabled",
+          "mechanism": "Hyd_A_700204_Disables_Hyd_IsEnabled",
+          "description": "When hydraulic temperature is above 80 degree C alarm 700204 is triggered (Hyd_A_700204=True), hydraulics is disabled (Hyd_IsEnabled=False)."
+        },
+        {
+          "from": "Hyd_A_700204",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700204_to_ErrorActive",
+          "description": "Critical hydraulic temperature alarm triggers an error state."
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Temp_lt_80",
+      "propagation": [
+        {
+          "from": "Hyd_Temp_lt_80",
+          "to": "Hyd_A_700204",
+          "mechanism": "Hyd_Temp_Alarm_Monitoring",
+          "description": "When Hyd_Temp_lt_80=False (temp >= 80°C) -> Alarm 700204 is triggered"
+        },
+        {
+          "from": "Hyd_A_700204",
+          "to": "Hyd_IsEnabled",
+          "mechanism": "Hyd_A_700204_Disables_Hyd_IsEnabled",
+          "description": "When hydraulic temperature is above 80 degree C alarm 700204 is triggered (Hyd_A_700204=True), hydraulics is disabled (Hyd_IsEnabled=False)."
+        },
+        {
+          "from": "Hyd_A_700204",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700204_to_ErrorActive",
+          "description": "Critical hydraulic temperature alarm triggers an error state."
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Level_Ok",
+      "propagation": [
+        {
+          "from": "Hyd_Level_Ok",
+          "to": "Hyd_A_700205",
+          "mechanism": "Hyd_Level_Warning_Monitoring",
+          "description": "When Hyd_Level_Ok=False -> Warning 700205 is immediately triggered"
+        },
+        {
+          "from": "Hyd_Level_Ok",
+          "to": "Hyd_A_700206",
+          "mechanism": "Hyd_Level_Alarm_Monitoring",
+          "description": "When Hyd_Level_Ok=False for at least 800ms  -> Alarm 700206 is triggered"
+        },
+        {
+          "from": "Hyd_Level_Ok",
+          "to": "Hyd_Pump_Ok",
+          "mechanism": "Hyd_Level_Low_Pump_Failure",
+          "description": "When Hyd_Level_Ok=False for some time, the probability of Hyd_Pump_OK=False rises (pump might fail)"
+        },
+        {
+          "from": "Hyd_A_700205",
+          "to": "M_WarnActive",
+          "mechanism": "Hyd_A_700205_to_WarnActive",
+          "description": "Hydraulic oil level near minimum warning triggers a general warning state."
+        },
+        {
+          "from": "Hyd_A_700206",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_A_700206_Disables_Hyd_Pump_On",
+          "description": "When hydraulic level is below minimum alarm 700206 is triggered (Hyd_A_700206=True), the hydraulic pump is turned off (Hyd_Pump_On=False)."
+        },
+        {
+          "from": "Hyd_A_700206",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700206_to_ErrorActive",
+          "description": "Hydraulic oil level below minimum alarm triggers an error state."
+        },
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_A_700208",
+          "mechanism": "Hyd_Pump_Monitoring",
+          "description": "When Hyd_Pump_Ok=False -> Motor protection switch is triggered indicated by alarm 700208=True"
+        },
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_Pump_Ok_Condition",
+          "description": "If Hyd_Pump_Ok=False, then Hyd_Pump_On is turned off (Hyd_Pump_On=False) to prevent damage."
+        },
+        {
+          "from": "M_WarnActive",
+          "to": "SL_Yellow",
+          "mechanism": "WarnActive_to_SL_Yellow",
+          "description": "A general warning can affect the yellow light state (e.g., blinking)."
+        },
+        {
+          "from": "Hyd_Pump_On",
+          "to": "Hyd_Pump_isOff",
+          "mechanism": "Hyd_Pump_On_Status",
+          "description": "When hydraulic pump is commanded to be on (Hyd_Pump_On=True), it results in the pump being on (Hyd_Pump_isOff=False)"
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "Hyd_A_700208",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700208_to_ErrorActive",
+          "description": "Hydraulic pump motor protection alarm triggers an error state."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Pump_Ok",
+      "propagation": [
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_A_700208",
+          "mechanism": "Hyd_Pump_Monitoring",
+          "description": "When Hyd_Pump_Ok=False -> Motor protection switch is triggered indicated by alarm 700208=True"
+        },
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_Pump_Ok_Condition",
+          "description": "If Hyd_Pump_Ok=False, then Hyd_Pump_On is turned off (Hyd_Pump_On=False) to prevent damage."
+        },
+        {
+          "from": "Hyd_A_700208",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700208_to_ErrorActive",
+          "description": "Hydraulic pump motor protection alarm triggers an error state."
+        },
+        {
+          "from": "Hyd_Pump_On",
+          "to": "Hyd_Pump_isOff",
+          "mechanism": "Hyd_Pump_On_Status",
+          "description": "When hydraulic pump is commanded to be on (Hyd_Pump_On=True), it results in the pump being on (Hyd_Pump_isOff=False)"
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Level_Ok",
+      "propagation": [
+        {
+          "from": "Hyd_Level_Ok",
+          "to": "Hyd_A_700205",
+          "mechanism": "Hyd_Level_Warning_Monitoring",
+          "description": "When Hyd_Level_Ok=False -> Warning 700205 is immediately triggered"
+        },
+        {
+          "from": "Hyd_Level_Ok",
+          "to": "Hyd_A_700206",
+          "mechanism": "Hyd_Level_Alarm_Monitoring",
+          "description": "When Hyd_Level_Ok=False for at least 800ms  -> Alarm 700206 is triggered"
+        },
+        {
+          "from": "Hyd_Level_Ok",
+          "to": "Hyd_Pump_Ok",
+          "mechanism": "Hyd_Level_Low_Pump_Failure",
+          "description": "When Hyd_Level_Ok=False for some time, the probability of Hyd_Pump_OK=False rises (pump might fail)"
+        },
+        {
+          "from": "Hyd_A_700205",
+          "to": "M_WarnActive",
+          "mechanism": "Hyd_A_700205_to_WarnActive",
+          "description": "Hydraulic oil level near minimum warning triggers a general warning state."
+        },
+        {
+          "from": "Hyd_A_700206",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_A_700206_Disables_Hyd_Pump_On",
+          "description": "When hydraulic level is below minimum alarm 700206 is triggered (Hyd_A_700206=True), the hydraulic pump is turned off (Hyd_Pump_On=False)."
+        },
+        {
+          "from": "Hyd_A_700206",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700206_to_ErrorActive",
+          "description": "Hydraulic oil level below minimum alarm triggers an error state."
+        },
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_A_700208",
+          "mechanism": "Hyd_Pump_Monitoring",
+          "description": "When Hyd_Pump_Ok=False -> Motor protection switch is triggered indicated by alarm 700208=True"
+        },
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_Pump_Ok_Condition",
+          "description": "If Hyd_Pump_Ok=False, then Hyd_Pump_On is turned off (Hyd_Pump_On=False) to prevent damage."
+        },
+        {
+          "from": "M_WarnActive",
+          "to": "SL_Yellow",
+          "mechanism": "WarnActive_to_SL_Yellow",
+          "description": "A general warning can affect the yellow light state (e.g., blinking)."
+        },
+        {
+          "from": "Hyd_Pump_On",
+          "to": "Hyd_Pump_isOff",
+          "mechanism": "Hyd_Pump_On_Status",
+          "description": "When hydraulic pump is commanded to be on (Hyd_Pump_On=True), it results in the pump being on (Hyd_Pump_isOff=False)"
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "Hyd_A_700208",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700208_to_ErrorActive",
+          "description": "Hydraulic pump motor protection alarm triggers an error state."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Pressure",
+      "propagation": [
+        {
+          "from": "Hyd_Pressure",
+          "to": "Hyd_A_700202",
+          "mechanism": "Hyd_Pressure_Monitoring",
+          "description": "When hydraulic pressure is out of normal range for at least 5 seconds -> Alarm 700202 is triggered"
+        },
+        {
+          "from": "Hyd_Pressure",
+          "to": "Hyd_Valve_P_Up",
+          "mechanism": "Hyd_Pressure_Control",
+          "description": "When hydraulic pressure falls below threshold, valve is commanded to open (Hyd_Valve_P_Up=True)"
+        },
+        {
+          "from": "Hyd_A_700202",
+          "to": "Hyd_Valve_P_Up",
+          "mechanism": "Hyd_A_700202_Disables_Hyd_Valve_P_Up",
+          "description": "When hydraulic pressure out of norm alarm 700202 is triggered (Hyd_A_700202=True), the pressure accumulation valve is closed in fear of leakage (Hyd_Valve_P_Up=False)."
+        },
+        {
+          "from": "Hyd_A_700202",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_A_700202_Disables_Hyd_Pump_On",
+          "description": "When pressure out of norm alarm 700202 is triggered (Hyd_A_700202=True), the hydraulic pump is turned off (Hyd_Pump_On=False)."
+        },
+        {
+          "from": "Hyd_A_700202",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700202_to_ErrorActive",
+          "description": "Hydraulic pressure out of norm alarm triggers an error state."
+        },
+        {
+          "from": "Hyd_Pump_On",
+          "to": "Hyd_Pump_isOff",
+          "mechanism": "Hyd_Pump_On_Status",
+          "description": "When hydraulic pump is commanded to be on (Hyd_Pump_On=True), it results in the pump being on (Hyd_Pump_isOff=False)"
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Temp_lt_70",
+      "propagation": [
+        {
+          "from": "Hyd_Temp_lt_70",
+          "to": "Hyd_A_700203",
+          "mechanism": "Hyd_Temp_Warning_Monitoring",
+          "description": "When Hyd_Temp_lt_70=False (temp >= 70°C) -> Warning 700203 is triggered"
+        },
+        {
+          "from": "Hyd_Temp_lt_70",
+          "to": "Hyd_Temp_lt_80",
+          "mechanism": "Hyd_Temp_70_to_80",
+          "description": "Temperature above 70 degree is reached before 80 degree (common unobserved confounder)"
+        },
+        {
+          "from": "Hyd_A_700203",
+          "to": "M_WarnActive",
+          "mechanism": "Hyd_A_700203_to_WarnActive",
+          "description": "High hydraulic temperature warning triggers a general warning state."
+        },
+        {
+          "from": "Hyd_Temp_lt_80",
+          "to": "Hyd_A_700204",
+          "mechanism": "Hyd_Temp_Alarm_Monitoring",
+          "description": "When Hyd_Temp_lt_80=False (temp >= 80°C) -> Alarm 700204 is triggered"
+        },
+        {
+          "from": "M_WarnActive",
+          "to": "SL_Yellow",
+          "mechanism": "WarnActive_to_SL_Yellow",
+          "description": "A general warning can affect the yellow light state (e.g., blinking)."
+        },
+        {
+          "from": "Hyd_A_700204",
+          "to": "Hyd_IsEnabled",
+          "mechanism": "Hyd_A_700204_Disables_Hyd_IsEnabled",
+          "description": "When hydraulic temperature is above 80 degree C alarm 700204 is triggered (Hyd_A_700204=True), hydraulics is disabled (Hyd_IsEnabled=False)."
+        },
+        {
+          "from": "Hyd_A_700204",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700204_to_ErrorActive",
+          "description": "Critical hydraulic temperature alarm triggers an error state."
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Temp_lt_80",
+      "propagation": [
+        {
+          "from": "Hyd_Temp_lt_80",
+          "to": "Hyd_A_700204",
+          "mechanism": "Hyd_Temp_Alarm_Monitoring",
+          "description": "When Hyd_Temp_lt_80=False (temp >= 80°C) -> Alarm 700204 is triggered"
+        },
+        {
+          "from": "Hyd_A_700204",
+          "to": "Hyd_IsEnabled",
+          "mechanism": "Hyd_A_700204_Disables_Hyd_IsEnabled",
+          "description": "When hydraulic temperature is above 80 degree C alarm 700204 is triggered (Hyd_A_700204=True), hydraulics is disabled (Hyd_IsEnabled=False)."
+        },
+        {
+          "from": "Hyd_A_700204",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700204_to_ErrorActive",
+          "description": "Critical hydraulic temperature alarm triggers an error state."
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Pressure",
+      "propagation": [
+        {
+          "from": "Hyd_Pressure",
+          "to": "Hyd_A_700202",
+          "mechanism": "Hyd_Pressure_Monitoring",
+          "description": "When hydraulic pressure is out of normal range for at least 5 seconds -> Alarm 700202 is triggered"
+        },
+        {
+          "from": "Hyd_Pressure",
+          "to": "Hyd_Valve_P_Up",
+          "mechanism": "Hyd_Pressure_Control",
+          "description": "When hydraulic pressure falls below threshold, valve is commanded to open (Hyd_Valve_P_Up=True)"
+        },
+        {
+          "from": "Hyd_A_700202",
+          "to": "Hyd_Valve_P_Up",
+          "mechanism": "Hyd_A_700202_Disables_Hyd_Valve_P_Up",
+          "description": "When hydraulic pressure out of norm alarm 700202 is triggered (Hyd_A_700202=True), the pressure accumulation valve is closed in fear of leakage (Hyd_Valve_P_Up=False)."
+        },
+        {
+          "from": "Hyd_A_700202",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_A_700202_Disables_Hyd_Pump_On",
+          "description": "When pressure out of norm alarm 700202 is triggered (Hyd_A_700202=True), the hydraulic pump is turned off (Hyd_Pump_On=False)."
+        },
+        {
+          "from": "Hyd_A_700202",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700202_to_ErrorActive",
+          "description": "Hydraulic pressure out of norm alarm triggers an error state."
+        },
+        {
+          "from": "Hyd_Pump_On",
+          "to": "Hyd_Pump_isOff",
+          "mechanism": "Hyd_Pump_On_Status",
+          "description": "When hydraulic pump is commanded to be on (Hyd_Pump_On=True), it results in the pump being on (Hyd_Pump_isOff=False)"
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Level_Ok",
+      "propagation": [
+        {
+          "from": "Hyd_Level_Ok",
+          "to": "Hyd_A_700205",
+          "mechanism": "Hyd_Level_Warning_Monitoring",
+          "description": "When Hyd_Level_Ok=False -> Warning 700205 is immediately triggered"
+        },
+        {
+          "from": "Hyd_Level_Ok",
+          "to": "Hyd_A_700206",
+          "mechanism": "Hyd_Level_Alarm_Monitoring",
+          "description": "When Hyd_Level_Ok=False for at least 800ms  -> Alarm 700206 is triggered"
+        },
+        {
+          "from": "Hyd_Level_Ok",
+          "to": "Hyd_Pump_Ok",
+          "mechanism": "Hyd_Level_Low_Pump_Failure",
+          "description": "When Hyd_Level_Ok=False for some time, the probability of Hyd_Pump_OK=False rises (pump might fail)"
+        },
+        {
+          "from": "Hyd_A_700205",
+          "to": "M_WarnActive",
+          "mechanism": "Hyd_A_700205_to_WarnActive",
+          "description": "Hydraulic oil level near minimum warning triggers a general warning state."
+        },
+        {
+          "from": "Hyd_A_700206",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_A_700206_Disables_Hyd_Pump_On",
+          "description": "When hydraulic level is below minimum alarm 700206 is triggered (Hyd_A_700206=True), the hydraulic pump is turned off (Hyd_Pump_On=False)."
+        },
+        {
+          "from": "Hyd_A_700206",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700206_to_ErrorActive",
+          "description": "Hydraulic oil level below minimum alarm triggers an error state."
+        },
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_A_700208",
+          "mechanism": "Hyd_Pump_Monitoring",
+          "description": "When Hyd_Pump_Ok=False -> Motor protection switch is triggered indicated by alarm 700208=True"
+        },
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_Pump_Ok_Condition",
+          "description": "If Hyd_Pump_Ok=False, then Hyd_Pump_On is turned off (Hyd_Pump_On=False) to prevent damage."
+        },
+        {
+          "from": "M_WarnActive",
+          "to": "SL_Yellow",
+          "mechanism": "WarnActive_to_SL_Yellow",
+          "description": "A general warning can affect the yellow light state (e.g., blinking)."
+        },
+        {
+          "from": "Hyd_Pump_On",
+          "to": "Hyd_Pump_isOff",
+          "mechanism": "Hyd_Pump_On_Status",
+          "description": "When hydraulic pump is commanded to be on (Hyd_Pump_On=True), it results in the pump being on (Hyd_Pump_isOff=False)"
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "Hyd_A_700208",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700208_to_ErrorActive",
+          "description": "Hydraulic pump motor protection alarm triggers an error state."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Pump_Ok",
+      "propagation": [
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_A_700208",
+          "mechanism": "Hyd_Pump_Monitoring",
+          "description": "When Hyd_Pump_Ok=False -> Motor protection switch is triggered indicated by alarm 700208=True"
+        },
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_Pump_Ok_Condition",
+          "description": "If Hyd_Pump_Ok=False, then Hyd_Pump_On is turned off (Hyd_Pump_On=False) to prevent damage."
+        },
+        {
+          "from": "Hyd_A_700208",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700208_to_ErrorActive",
+          "description": "Hydraulic pump motor protection alarm triggers an error state."
+        },
+        {
+          "from": "Hyd_Pump_On",
+          "to": "Hyd_Pump_isOff",
+          "mechanism": "Hyd_Pump_On_Status",
+          "description": "When hydraulic pump is commanded to be on (Hyd_Pump_On=True), it results in the pump being on (Hyd_Pump_isOff=False)"
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Filter_Ok",
+      "propagation": [
+        {
+          "from": "Hyd_Filter_Ok",
+          "to": "Hyd_A_700207",
+          "mechanism": "Hyd_Filter_Monitoring",
+          "description": "When Hyd_Filter_Ok=False for at least 5 seconds -> Alarm 700207 is triggered"
+        },
+        {
+          "from": "Hyd_Filter_Ok",
+          "to": "Hyd_Pump_Ok",
+          "mechanism": "Hyd_Filter_Clogged_Pump_Failure",
+          "description": "When Hyd_Filter_Ok=False for some time, the probability of Hyd_Pump_OK=False rises (pump might fail)"
+        },
+        {
+          "from": "Hyd_A_700207",
+          "to": "Hyd_IsEnabled",
+          "mechanism": "Hyd_A_700207_Disables_Hyd_IsEnabled",
+          "description": "When hydraulic filter is clogged alarm 700207 is triggered (Hyd_A_700207=True), hydraulics is disabled (Hyd_IsEnabled=False)."
+        },
+        {
+          "from": "Hyd_A_700207",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700207_to_ErrorActive",
+          "description": "Clogged hydraulic filter alarm triggers an error state."
+        },
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_A_700208",
+          "mechanism": "Hyd_Pump_Monitoring",
+          "description": "When Hyd_Pump_Ok=False -> Motor protection switch is triggered indicated by alarm 700208=True"
+        },
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_Pump_Ok_Condition",
+          "description": "If Hyd_Pump_Ok=False, then Hyd_Pump_On is turned off (Hyd_Pump_On=False) to prevent damage."
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "Hyd_A_700208",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700208_to_ErrorActive",
+          "description": "Hydraulic pump motor protection alarm triggers an error state."
+        },
+        {
+          "from": "Hyd_Pump_On",
+          "to": "Hyd_Pump_isOff",
+          "mechanism": "Hyd_Pump_On_Status",
+          "description": "When hydraulic pump is commanded to be on (Hyd_Pump_On=True), it results in the pump being on (Hyd_Pump_isOff=False)"
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Pump_Ok",
+      "propagation": [
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_A_700208",
+          "mechanism": "Hyd_Pump_Monitoring",
+          "description": "When Hyd_Pump_Ok=False -> Motor protection switch is triggered indicated by alarm 700208=True"
+        },
+        {
+          "from": "Hyd_Pump_Ok",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_Pump_Ok_Condition",
+          "description": "If Hyd_Pump_Ok=False, then Hyd_Pump_On is turned off (Hyd_Pump_On=False) to prevent damage."
+        },
+        {
+          "from": "Hyd_A_700208",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700208_to_ErrorActive",
+          "description": "Hydraulic pump motor protection alarm triggers an error state."
+        },
+        {
+          "from": "Hyd_Pump_On",
+          "to": "Hyd_Pump_isOff",
+          "mechanism": "Hyd_Pump_On_Status",
+          "description": "When hydraulic pump is commanded to be on (Hyd_Pump_On=True), it results in the pump being on (Hyd_Pump_isOff=False)"
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Pressure",
+      "propagation": [
+        {
+          "from": "Hyd_Pressure",
+          "to": "Hyd_A_700202",
+          "mechanism": "Hyd_Pressure_Monitoring",
+          "description": "When hydraulic pressure is out of normal range for at least 5 seconds -> Alarm 700202 is triggered"
+        },
+        {
+          "from": "Hyd_Pressure",
+          "to": "Hyd_Valve_P_Up",
+          "mechanism": "Hyd_Pressure_Control",
+          "description": "When hydraulic pressure falls below threshold, valve is commanded to open (Hyd_Valve_P_Up=True)"
+        },
+        {
+          "from": "Hyd_A_700202",
+          "to": "Hyd_Valve_P_Up",
+          "mechanism": "Hyd_A_700202_Disables_Hyd_Valve_P_Up",
+          "description": "When hydraulic pressure out of norm alarm 700202 is triggered (Hyd_A_700202=True), the pressure accumulation valve is closed in fear of leakage (Hyd_Valve_P_Up=False)."
+        },
+        {
+          "from": "Hyd_A_700202",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_A_700202_Disables_Hyd_Pump_On",
+          "description": "When pressure out of norm alarm 700202 is triggered (Hyd_A_700202=True), the hydraulic pump is turned off (Hyd_Pump_On=False)."
+        },
+        {
+          "from": "Hyd_A_700202",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700202_to_ErrorActive",
+          "description": "Hydraulic pressure out of norm alarm triggers an error state."
+        },
+        {
+          "from": "Hyd_Pump_On",
+          "to": "Hyd_Pump_isOff",
+          "mechanism": "Hyd_Pump_On_Status",
+          "description": "When hydraulic pump is commanded to be on (Hyd_Pump_On=True), it results in the pump being on (Hyd_Pump_isOff=False)"
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "Hyd_Pressure",
+      "propagation": [
+        {
+          "from": "Hyd_Pressure",
+          "to": "Hyd_A_700202",
+          "mechanism": "Hyd_Pressure_Monitoring",
+          "description": "When hydraulic pressure is out of normal range for at least 5 seconds -> Alarm 700202 is triggered"
+        },
+        {
+          "from": "Hyd_Pressure",
+          "to": "Hyd_Valve_P_Up",
+          "mechanism": "Hyd_Pressure_Control",
+          "description": "When hydraulic pressure falls below threshold, valve is commanded to open (Hyd_Valve_P_Up=True)"
+        },
+        {
+          "from": "Hyd_A_700202",
+          "to": "Hyd_Valve_P_Up",
+          "mechanism": "Hyd_A_700202_Disables_Hyd_Valve_P_Up",
+          "description": "When hydraulic pressure out of norm alarm 700202 is triggered (Hyd_A_700202=True), the pressure accumulation valve is closed in fear of leakage (Hyd_Valve_P_Up=False)."
+        },
+        {
+          "from": "Hyd_A_700202",
+          "to": "Hyd_Pump_On",
+          "mechanism": "Hyd_A_700202_Disables_Hyd_Pump_On",
+          "description": "When pressure out of norm alarm 700202 is triggered (Hyd_A_700202=True), the hydraulic pump is turned off (Hyd_Pump_On=False)."
+        },
+        {
+          "from": "Hyd_A_700202",
+          "to": "M_ErrorActive",
+          "mechanism": "Hyd_A_700202_to_ErrorActive",
+          "description": "Hydraulic pressure out of norm alarm triggers an error state."
+        },
+        {
+          "from": "Hyd_Pump_On",
+          "to": "Hyd_Pump_isOff",
+          "mechanism": "Hyd_Pump_On_Status",
+          "description": "When hydraulic pump is commanded to be on (Hyd_Pump_On=True), it results in the pump being on (Hyd_Pump_isOff=False)"
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    }
+  ],
+  "timing_stats": {
+    "detection_delay_sec": {
+      "count": 41,
+      "mean": 54.028682926829276,
+      "min": 24.945999999999998,
+      "max": 100.05199999999999,
+      "median": 50.86500000000001
+    },
+    "diagnosis_delay_sec": {
+      "count": 41,
+      "mean": 64.27424390243903,
+      "min": 33.822,
+      "max": 100.559,
+      "median": 63.43300000000001
+    },
+    "resolution_delay_sec": {
+      "count": 41,
+      "mean": 74.75212195121951,
+      "min": 43.699,
+      "max": 116.95200000000001,
+      "median": 69.97399999999999
+    },
+    "total_runs": 41
+  }
+}

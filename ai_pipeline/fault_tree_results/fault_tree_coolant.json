@@ -1,0 +1,451 @@
+{
+  "subsystem": "coolant",
+  "top_event": "COOLANT_SYSTEM_FAULT",
+  "experiments": [
+    {
+      "exp_id": "exp_22",
+      "group": "coolant"
+    },
+    {
+      "exp_id": "exp_27",
+      "group": "coolant"
+    },
+    {
+      "exp_id": "exp_28",
+      "group": "coolant"
+    },
+    {
+      "exp_id": "exp_35",
+      "group": "coolant"
+    }
+  ],
+  "fault_scenarios": [
+    {
+      "exp_id": "exp_22",
+      "description": "The high pressure pump fails and coolant level in tank drops below the minimum threshold.",
+      "root_causes": [
+        "HP_Pump_Ok",
+        "LT_Level_Ok"
+      ],
+      "triggered_alarms": [
+        "HP_A_700304",
+        "LT_A_700317"
+      ],
+      "diagnoses": [
+        "Leakage in coolant system."
+      ]
+    },
+    {
+      "exp_id": "exp_27",
+      "description": "Defective or worn seals cause coolant to leak, so tank level falls below the minimum threshold and triggers a MIN‑level alarm. Continued low flow leads to pump cavitation/overload, causing the high‑pressure pump motor protection to trip and shut the motor off. Operator acknowledges the faults and terminates the experiment.",
+      "root_causes": [
+        "CLT_Level_lt_Min",
+        "HP_Pump_Ok"
+      ],
+      "triggered_alarms": [
+        "CLT_A_700310",
+        "HP_A_700304"
+      ],
+      "diagnoses": [
+        "Leakage in coolant system."
+      ]
+    },
+    {
+      "exp_id": "exp_28",
+      "description": "Due to highly contaminated coolant, the Hydac filter clogs first and then the fleece filter blocks completely. Coolant circulation stops, causing the low‑pressure (ND) protection switch to trip and shut down the pump. Operator acknowledges the fault and terminates the experiment.",
+      "root_causes": [
+        "CLF_Filter_Ok",
+        "F_Filter_Ok",
+        "LP_Pump_Ok"
+      ],
+      "triggered_alarms": [
+        "CLF_A_700307",
+        "F_A_700313",
+        "LP_A_700301"
+      ],
+      "diagnoses": [
+        "Highly Contaminated Coolant."
+      ]
+    },
+    {
+      "exp_id": "exp_35",
+      "description": "As debris accumulates, the Hydac filter becomes fully blocked, starving the pump inlet. The pump protection triggers, shutting off the pump.",
+      "root_causes": [
+        "CLF_Filter_Ok",
+        "LP_Pump_Ok"
+      ],
+      "triggered_alarms": [
+        "CLF_A_700307",
+        "LP_A_700301"
+      ],
+      "diagnoses": [
+        "Highly Contaminated Coolant."
+      ]
+    }
+  ],
+  "causal_chains": [
+    {
+      "root_cause": "HP_Pump_Ok",
+      "propagation": [
+        {
+          "from": "HP_Pump_Ok",
+          "to": "HP_A_700304",
+          "mechanism": "HP_Pump_Monitoring",
+          "description": "When HP_Pump_Ok=False -> Alarm 700304 is triggered"
+        },
+        {
+          "from": "HP_Pump_Ok",
+          "to": "HP_Pump_isOff",
+          "mechanism": "HP_Pump_not_ok_to_off",
+          "description": "When HP_Pump_Ok=False, then HP_Pump_isOff=True, i.e. the pump is turned off to prevent damage."
+        },
+        {
+          "from": "HP_A_700304",
+          "to": "M_ErrorActive",
+          "mechanism": "HP_A_700304_to_ErrorActive",
+          "description": "High pressure pump motor protection alarm triggers an error state."
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "LT_Level_Ok",
+      "propagation": [
+        {
+          "from": "LT_Level_Ok",
+          "to": "LT_A_700317",
+          "mechanism": "LT_Level_Monitoring",
+          "description": "When LT_Level_Ok=False -> Alarm 700317 is triggered"
+        },
+        {
+          "from": "LT_Level_Ok",
+          "to": "LT_Pump_Ok",
+          "mechanism": "LT_Level_Pump_Ok",
+          "description": "When LT_Level_Ok=False -> LT_Pump_Ok=False, i.e. the pump is turned off to prevent overflow."
+        }
+      ]
+    },
+    {
+      "root_cause": "CLT_Level_lt_Min",
+      "propagation": [
+        {
+          "from": "CLT_Level_lt_Min",
+          "to": "CLT_A_700310",
+          "mechanism": "CLT_Level_Min_Monitoring",
+          "description": "When Level_lt_Min=True -> Alarm 700310 is triggered"
+        },
+        {
+          "from": "CLT_A_700310",
+          "to": "M_ErrorActive",
+          "mechanism": "CLT_A_700310_to_ErrorActive",
+          "description": "Coolant tank level minimum alarm triggers an error state."
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "HP_Pump_Ok",
+      "propagation": [
+        {
+          "from": "HP_Pump_Ok",
+          "to": "HP_A_700304",
+          "mechanism": "HP_Pump_Monitoring",
+          "description": "When HP_Pump_Ok=False -> Alarm 700304 is triggered"
+        },
+        {
+          "from": "HP_Pump_Ok",
+          "to": "HP_Pump_isOff",
+          "mechanism": "HP_Pump_not_ok_to_off",
+          "description": "When HP_Pump_Ok=False, then HP_Pump_isOff=True, i.e. the pump is turned off to prevent damage."
+        },
+        {
+          "from": "HP_A_700304",
+          "to": "M_ErrorActive",
+          "mechanism": "HP_A_700304_to_ErrorActive",
+          "description": "High pressure pump motor protection alarm triggers an error state."
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "CLF_Filter_Ok",
+      "propagation": [
+        {
+          "from": "CLF_Filter_Ok",
+          "to": "CLF_A_700307",
+          "mechanism": "CLF_Filter_Monitoring",
+          "description": "When Filter_OK=False for at least 5 seconds -> Alarm 700307 is triggered"
+        },
+        {
+          "from": "CLF_A_700307",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "CLF_A_700307_to_WarnWithStacklight",
+          "description": "Clogged coolant filter triggers a warning with stacklight."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "F_Filter_Ok",
+      "propagation": [
+        {
+          "from": "F_Filter_Ok",
+          "to": "F_A_700313",
+          "mechanism": "Fleece_Filter_Monitoring",
+          "description": "When Fleece_Filter_Ok=False for at least 5 seconds --> Alarm 700313 is triggered"
+        }
+      ]
+    },
+    {
+      "root_cause": "LP_Pump_Ok",
+      "propagation": [
+        {
+          "from": "LP_Pump_Ok",
+          "to": "LP_A_700301",
+          "mechanism": "LP_Pump_Monitoring",
+          "description": "When LP_Pump_Ok=False -> Alarm 700301 is triggered"
+        },
+        {
+          "from": "LP_Pump_Ok",
+          "to": "LP_Pump_On",
+          "mechanism": "LP_Pump_On_Condition",
+          "description": "Only if LP_Pump_Ok=True, then LP_Pump_On can be True."
+        },
+        {
+          "from": "LP_A_700301",
+          "to": "M_ErrorActive",
+          "mechanism": "LP_A_700301_to_ErrorActive",
+          "description": "Low pressure pump motor protection alarm triggers an error state."
+        },
+        {
+          "from": "LP_Pump_On",
+          "to": "HP_Pump_isOff",
+          "mechanism": "LP_Pump_On_HP_Pump_Off",
+          "description": "When LP Pump is commanded to be on, then HP Pump is turned off."
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "CLF_Filter_Ok",
+      "propagation": [
+        {
+          "from": "CLF_Filter_Ok",
+          "to": "CLF_A_700307",
+          "mechanism": "CLF_Filter_Monitoring",
+          "description": "When Filter_OK=False for at least 5 seconds -> Alarm 700307 is triggered"
+        },
+        {
+          "from": "CLF_A_700307",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "CLF_A_700307_to_WarnWithStacklight",
+          "description": "Clogged coolant filter triggers a warning with stacklight."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "LP_Pump_Ok",
+      "propagation": [
+        {
+          "from": "LP_Pump_Ok",
+          "to": "LP_A_700301",
+          "mechanism": "LP_Pump_Monitoring",
+          "description": "When LP_Pump_Ok=False -> Alarm 700301 is triggered"
+        },
+        {
+          "from": "LP_Pump_Ok",
+          "to": "LP_Pump_On",
+          "mechanism": "LP_Pump_On_Condition",
+          "description": "Only if LP_Pump_Ok=True, then LP_Pump_On can be True."
+        },
+        {
+          "from": "LP_A_700301",
+          "to": "M_ErrorActive",
+          "mechanism": "LP_A_700301_to_ErrorActive",
+          "description": "Low pressure pump motor protection alarm triggers an error state."
+        },
+        {
+          "from": "LP_Pump_On",
+          "to": "HP_Pump_isOff",
+          "mechanism": "LP_Pump_On_HP_Pump_Off",
+          "description": "When LP Pump is commanded to be on, then HP Pump is turned off."
+        },
+        {
+          "from": "M_ErrorActive",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "ErrorActive_to_WarnWithStacklight",
+          "description": "When an error is active, a warning with stacklight is also triggered."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    }
+  ],
+  "timing_stats": {
+    "detection_delay_sec": {
+      "count": 25,
+      "mean": 66.31204,
+      "min": 37.828,
+      "max": 103.013,
+      "median": 64.50899999999999
+    },
+    "diagnosis_delay_sec": {
+      "count": 25,
+      "mean": 79.837,
+      "min": 40.21600000000001,
+      "max": 116.638,
+      "median": 79.714
+    },
+    "resolution_delay_sec": {
+      "count": 25,
+      "mean": 117.55032000000001,
+      "min": 48.791,
+      "max": 183.859,
+      "median": 121.36099999999999
+    },
+    "total_runs": 25
+  }
+}

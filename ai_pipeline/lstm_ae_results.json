@@ -1,0 +1,31 @@
+{
+  "normal_error_mean": 0.7447503209114075,
+  "normal_error_std": 4.806342124938965,
+  "threshold_95": 1.0832487344741821,
+  "threshold_99": 4.980090141296387,
+  "subsystem_results": {
+    "coolant": {
+      "n_sequences": 595,
+      "error_mean": 97422013366272.0,
+      "error_std": 154487893262336.0,
+      "detection_rate_95": 100.0,
+      "detection_rate_99": 100.0
+    },
+    "hydraulics": {
+      "n_sequences": 692,
+      "error_mean": 6.161317229310327e+21,
+      "error_std": Infinity,
+      "detection_rate_95": 100.0,
+      "detection_rate_99": 100.0
+    },
+    "probe": {
+      "n_sequences": 636,
+      "error_mean": 29874211258368.0,
+      "error_std": 63350755033088.0,
+      "detection_rate_95": 100.0,
+      "detection_rate_99": 100.0
+    }
+  },
+  "false_positive_95": 5.00544069640914,
+  "false_positive_99": 1.001088139281828
+}

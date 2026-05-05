@@ -1,0 +1,778 @@
+{
+  "subsystem": "probe",
+  "top_event": "PROBE_SYSTEM_FAULT",
+  "experiments": [
+    {
+      "exp_id": "exp_1",
+      "group": "probe"
+    },
+    {
+      "exp_id": "exp_2_3",
+      "group": "probe"
+    },
+    {
+      "exp_id": "exp_4",
+      "group": "probe"
+    },
+    {
+      "exp_id": "exp_5",
+      "group": "probe"
+    },
+    {
+      "exp_id": "exp_6",
+      "group": "probe"
+    },
+    {
+      "exp_id": "exp_7",
+      "group": "probe"
+    }
+  ],
+  "fault_scenarios": [
+    {
+      "exp_id": "exp_1",
+      "description": "A) WP suddenly switches to false (spontaneous sensor failure - MPA is no longer detected despite not moving) B) WP never becomes true (MPA is not recognized at working position after movement)",
+      "root_causes": [
+        "MPA_WorkPos"
+      ],
+      "triggered_alarms": [
+        "MPA_A_701124"
+      ],
+      "diagnoses": [
+        "MPA_WorkPos Sensor is defective"
+      ]
+    },
+    {
+      "exp_id": "exp_2_3",
+      "description": "A) IP suddenly switches to false (spontaneous sensor failure - MPA is no longer detected at initial position despite not moving) B) IP never becomes true (MPA is not recognized at initial position after movement)",
+      "root_causes": [
+        "MPA_InitPos"
+      ],
+      "triggered_alarms": [
+        "MPA_A_701124"
+      ],
+      "diagnoses": [
+        "MPA_InitPos Sensor is defective"
+      ]
+    },
+    {
+      "exp_id": "exp_4",
+      "description": "WP incorrectly remains true even after movement, while IP becomes true - the system can no longer determine the actual position of the MPA",
+      "root_causes": [
+        "MPA_WorkPos"
+      ],
+      "triggered_alarms": [
+        "MPA_A_701125"
+      ],
+      "diagnoses": [
+        "MPA_WorkPos Sensor is defective"
+      ]
+    },
+    {
+      "exp_id": "exp_5",
+      "description": "IP incorrectly remains true even after movement - the system falsely believes the MPA is still at initial position, despite it having moved",
+      "root_causes": [
+        "MPA_InitPos"
+      ],
+      "triggered_alarms": [
+        "MPA_A_701125"
+      ],
+      "diagnoses": [
+        "MPA_InitPos Sensor is defective"
+      ]
+    },
+    {
+      "exp_id": "exp_6",
+      "description": "IP remains true - no movement has occurred / the axis is stuck",
+      "root_causes": [
+        "MPA_InitPos",
+        "MPA_WorkPos"
+      ],
+      "triggered_alarms": [
+        "MPA_A_701124"
+      ],
+      "diagnoses": [
+        "MPA is stuck -> does not move besides being commanded to."
+      ]
+    },
+    {
+      "exp_id": "exp_7",
+      "description": "WP remains true - no movement has occurred",
+      "root_causes": [
+        "MPA_InitPos",
+        "MPA_WorkPos"
+      ],
+      "triggered_alarms": [
+        "MPA_A_701124"
+      ],
+      "diagnoses": [
+        "MPA is stuck = does not move besides being commanded to."
+      ]
+    }
+  ],
+  "causal_chains": [
+    {
+      "root_cause": "MPA_WorkPos",
+      "propagation": [
+        {
+          "from": "MPA_WorkPos",
+          "to": "MP_Inactive",
+          "mechanism": "MPA_WorkPos_MP_Inactive",
+          "description": "When axis is in working position (MPA_WorkPos=True), measuring probe can be activated (MP_Inactive=False)"
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_WorkPos_Monitoring",
+          "description": "When axis is not reaching work pos in time (MPA_WorkPos=False), besides being commanded to (MPA_toWorkPos=True),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701125",
+          "mechanism": "MPA_WorkPos_BothEndPosSensors",
+          "description": "When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),\n                        alarm 701125 is triggered."
+        },
+        {
+          "from": "MPA_A_701124",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701124_to_WarnWithStacklight",
+          "description": "Measuring probe end position not reached alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "MPA_A_701125",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701125_to_WarnWithStacklight",
+          "description": "Measuring probe both end position sensors active alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "MPA_InitPos",
+      "propagation": [
+        {
+          "from": "MPA_InitPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_InitPos_Monitoring",
+          "description": "When axis is not reaching initial pos in time (MPA_InitPos=False), besides being commanded to (MPA_toInitPos=True),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_InitPos",
+          "to": "MPA_A_701125",
+          "mechanism": "MPA_InitPos_BothEndPosSensors",
+          "description": "When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),\n                        alarm 701125 is triggered."
+        },
+        {
+          "from": "MPA_InitPos",
+          "to": "MPC_close",
+          "mechanism": "MPA_InitPos_MPC_close",
+          "description": "When axis is in initial position (MPA_InitPos=True), cover can be commanded to close (MPC_close=True)"
+        },
+        {
+          "from": "MPA_A_701124",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701124_to_WarnWithStacklight",
+          "description": "Measuring probe end position not reached alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "MPA_A_701125",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701125_to_WarnWithStacklight",
+          "description": "Measuring probe both end position sensors active alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "MPC_close",
+          "to": "MPC_Closed",
+          "mechanism": "MPC_close_MPC_Closed",
+          "description": "When cover is commanded to close (MPC_close=True), cover closes (MPC_Closed=True)"
+        },
+        {
+          "from": "MPC_close",
+          "to": "MPC_open",
+          "mechanism": "MPC_close_MPC_open",
+          "description": "When cover is not commanded to close (MPC_close=False),\n                                it can be commanded to open (MPC_open=True)"
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        },
+        {
+          "from": "MPC_open",
+          "to": "MPC_isOpen",
+          "mechanism": "MPC_open_MPC_isOpen",
+          "description": "When cover is commanded to open (MPC_open=True), cover opens (MPC_isOpen=True)"
+        },
+        {
+          "from": "MPC_isOpen",
+          "to": "MPA_toWorkPos",
+          "mechanism": "MPC_isOpen_MPA_toWorkPos",
+          "description": "When cover is open (MPC_isOpen=True), axis can be commanded to working position (MPA_toWorkPos=True)"
+        },
+        {
+          "from": "MPA_toWorkPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_toWorkPos_Monitoring",
+          "description": "When axis is commanded to working position (MPA_toWorkPos=True) but does not reach it in time (MPA_WorkPos=False),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_toWorkPos",
+          "to": "MPA_WorkPos",
+          "mechanism": "MPA_toWorkPos_MPA_WorkPos",
+          "description": "When axis is commanded to working position (MPA_toWorkPos=True), it moves to working position (MPA_WorkPos=True)"
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MP_Inactive",
+          "mechanism": "MPA_WorkPos_MP_Inactive",
+          "description": "When axis is in working position (MPA_WorkPos=True), measuring probe can be activated (MP_Inactive=False)"
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_WorkPos_Monitoring",
+          "description": "When axis is not reaching work pos in time (MPA_WorkPos=False), besides being commanded to (MPA_toWorkPos=True),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701125",
+          "mechanism": "MPA_WorkPos_BothEndPosSensors",
+          "description": "When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),\n                        alarm 701125 is triggered."
+        }
+      ]
+    },
+    {
+      "root_cause": "MPA_WorkPos",
+      "propagation": [
+        {
+          "from": "MPA_WorkPos",
+          "to": "MP_Inactive",
+          "mechanism": "MPA_WorkPos_MP_Inactive",
+          "description": "When axis is in working position (MPA_WorkPos=True), measuring probe can be activated (MP_Inactive=False)"
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_WorkPos_Monitoring",
+          "description": "When axis is not reaching work pos in time (MPA_WorkPos=False), besides being commanded to (MPA_toWorkPos=True),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701125",
+          "mechanism": "MPA_WorkPos_BothEndPosSensors",
+          "description": "When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),\n                        alarm 701125 is triggered."
+        },
+        {
+          "from": "MPA_A_701124",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701124_to_WarnWithStacklight",
+          "description": "Measuring probe end position not reached alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "MPA_A_701125",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701125_to_WarnWithStacklight",
+          "description": "Measuring probe both end position sensors active alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "MPA_InitPos",
+      "propagation": [
+        {
+          "from": "MPA_InitPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_InitPos_Monitoring",
+          "description": "When axis is not reaching initial pos in time (MPA_InitPos=False), besides being commanded to (MPA_toInitPos=True),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_InitPos",
+          "to": "MPA_A_701125",
+          "mechanism": "MPA_InitPos_BothEndPosSensors",
+          "description": "When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),\n                        alarm 701125 is triggered."
+        },
+        {
+          "from": "MPA_InitPos",
+          "to": "MPC_close",
+          "mechanism": "MPA_InitPos_MPC_close",
+          "description": "When axis is in initial position (MPA_InitPos=True), cover can be commanded to close (MPC_close=True)"
+        },
+        {
+          "from": "MPA_A_701124",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701124_to_WarnWithStacklight",
+          "description": "Measuring probe end position not reached alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "MPA_A_701125",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701125_to_WarnWithStacklight",
+          "description": "Measuring probe both end position sensors active alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "MPC_close",
+          "to": "MPC_Closed",
+          "mechanism": "MPC_close_MPC_Closed",
+          "description": "When cover is commanded to close (MPC_close=True), cover closes (MPC_Closed=True)"
+        },
+        {
+          "from": "MPC_close",
+          "to": "MPC_open",
+          "mechanism": "MPC_close_MPC_open",
+          "description": "When cover is not commanded to close (MPC_close=False),\n                                it can be commanded to open (MPC_open=True)"
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        },
+        {
+          "from": "MPC_open",
+          "to": "MPC_isOpen",
+          "mechanism": "MPC_open_MPC_isOpen",
+          "description": "When cover is commanded to open (MPC_open=True), cover opens (MPC_isOpen=True)"
+        },
+        {
+          "from": "MPC_isOpen",
+          "to": "MPA_toWorkPos",
+          "mechanism": "MPC_isOpen_MPA_toWorkPos",
+          "description": "When cover is open (MPC_isOpen=True), axis can be commanded to working position (MPA_toWorkPos=True)"
+        },
+        {
+          "from": "MPA_toWorkPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_toWorkPos_Monitoring",
+          "description": "When axis is commanded to working position (MPA_toWorkPos=True) but does not reach it in time (MPA_WorkPos=False),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_toWorkPos",
+          "to": "MPA_WorkPos",
+          "mechanism": "MPA_toWorkPos_MPA_WorkPos",
+          "description": "When axis is commanded to working position (MPA_toWorkPos=True), it moves to working position (MPA_WorkPos=True)"
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MP_Inactive",
+          "mechanism": "MPA_WorkPos_MP_Inactive",
+          "description": "When axis is in working position (MPA_WorkPos=True), measuring probe can be activated (MP_Inactive=False)"
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_WorkPos_Monitoring",
+          "description": "When axis is not reaching work pos in time (MPA_WorkPos=False), besides being commanded to (MPA_toWorkPos=True),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701125",
+          "mechanism": "MPA_WorkPos_BothEndPosSensors",
+          "description": "When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),\n                        alarm 701125 is triggered."
+        }
+      ]
+    },
+    {
+      "root_cause": "MPA_InitPos",
+      "propagation": [
+        {
+          "from": "MPA_InitPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_InitPos_Monitoring",
+          "description": "When axis is not reaching initial pos in time (MPA_InitPos=False), besides being commanded to (MPA_toInitPos=True),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_InitPos",
+          "to": "MPA_A_701125",
+          "mechanism": "MPA_InitPos_BothEndPosSensors",
+          "description": "When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),\n                        alarm 701125 is triggered."
+        },
+        {
+          "from": "MPA_InitPos",
+          "to": "MPC_close",
+          "mechanism": "MPA_InitPos_MPC_close",
+          "description": "When axis is in initial position (MPA_InitPos=True), cover can be commanded to close (MPC_close=True)"
+        },
+        {
+          "from": "MPA_A_701124",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701124_to_WarnWithStacklight",
+          "description": "Measuring probe end position not reached alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "MPA_A_701125",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701125_to_WarnWithStacklight",
+          "description": "Measuring probe both end position sensors active alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "MPC_close",
+          "to": "MPC_Closed",
+          "mechanism": "MPC_close_MPC_Closed",
+          "description": "When cover is commanded to close (MPC_close=True), cover closes (MPC_Closed=True)"
+        },
+        {
+          "from": "MPC_close",
+          "to": "MPC_open",
+          "mechanism": "MPC_close_MPC_open",
+          "description": "When cover is not commanded to close (MPC_close=False),\n                                it can be commanded to open (MPC_open=True)"
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        },
+        {
+          "from": "MPC_open",
+          "to": "MPC_isOpen",
+          "mechanism": "MPC_open_MPC_isOpen",
+          "description": "When cover is commanded to open (MPC_open=True), cover opens (MPC_isOpen=True)"
+        },
+        {
+          "from": "MPC_isOpen",
+          "to": "MPA_toWorkPos",
+          "mechanism": "MPC_isOpen_MPA_toWorkPos",
+          "description": "When cover is open (MPC_isOpen=True), axis can be commanded to working position (MPA_toWorkPos=True)"
+        },
+        {
+          "from": "MPA_toWorkPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_toWorkPos_Monitoring",
+          "description": "When axis is commanded to working position (MPA_toWorkPos=True) but does not reach it in time (MPA_WorkPos=False),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_toWorkPos",
+          "to": "MPA_WorkPos",
+          "mechanism": "MPA_toWorkPos_MPA_WorkPos",
+          "description": "When axis is commanded to working position (MPA_toWorkPos=True), it moves to working position (MPA_WorkPos=True)"
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MP_Inactive",
+          "mechanism": "MPA_WorkPos_MP_Inactive",
+          "description": "When axis is in working position (MPA_WorkPos=True), measuring probe can be activated (MP_Inactive=False)"
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_WorkPos_Monitoring",
+          "description": "When axis is not reaching work pos in time (MPA_WorkPos=False), besides being commanded to (MPA_toWorkPos=True),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701125",
+          "mechanism": "MPA_WorkPos_BothEndPosSensors",
+          "description": "When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),\n                        alarm 701125 is triggered."
+        }
+      ]
+    },
+    {
+      "root_cause": "MPA_WorkPos",
+      "propagation": [
+        {
+          "from": "MPA_WorkPos",
+          "to": "MP_Inactive",
+          "mechanism": "MPA_WorkPos_MP_Inactive",
+          "description": "When axis is in working position (MPA_WorkPos=True), measuring probe can be activated (MP_Inactive=False)"
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_WorkPos_Monitoring",
+          "description": "When axis is not reaching work pos in time (MPA_WorkPos=False), besides being commanded to (MPA_toWorkPos=True),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701125",
+          "mechanism": "MPA_WorkPos_BothEndPosSensors",
+          "description": "When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),\n                        alarm 701125 is triggered."
+        },
+        {
+          "from": "MPA_A_701124",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701124_to_WarnWithStacklight",
+          "description": "Measuring probe end position not reached alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "MPA_A_701125",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701125_to_WarnWithStacklight",
+          "description": "Measuring probe both end position sensors active alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    },
+    {
+      "root_cause": "MPA_InitPos",
+      "propagation": [
+        {
+          "from": "MPA_InitPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_InitPos_Monitoring",
+          "description": "When axis is not reaching initial pos in time (MPA_InitPos=False), besides being commanded to (MPA_toInitPos=True),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_InitPos",
+          "to": "MPA_A_701125",
+          "mechanism": "MPA_InitPos_BothEndPosSensors",
+          "description": "When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),\n                        alarm 701125 is triggered."
+        },
+        {
+          "from": "MPA_InitPos",
+          "to": "MPC_close",
+          "mechanism": "MPA_InitPos_MPC_close",
+          "description": "When axis is in initial position (MPA_InitPos=True), cover can be commanded to close (MPC_close=True)"
+        },
+        {
+          "from": "MPA_A_701124",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701124_to_WarnWithStacklight",
+          "description": "Measuring probe end position not reached alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "MPA_A_701125",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701125_to_WarnWithStacklight",
+          "description": "Measuring probe both end position sensors active alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "MPC_close",
+          "to": "MPC_Closed",
+          "mechanism": "MPC_close_MPC_Closed",
+          "description": "When cover is commanded to close (MPC_close=True), cover closes (MPC_Closed=True)"
+        },
+        {
+          "from": "MPC_close",
+          "to": "MPC_open",
+          "mechanism": "MPC_close_MPC_open",
+          "description": "When cover is not commanded to close (MPC_close=False),\n                                it can be commanded to open (MPC_open=True)"
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        },
+        {
+          "from": "MPC_open",
+          "to": "MPC_isOpen",
+          "mechanism": "MPC_open_MPC_isOpen",
+          "description": "When cover is commanded to open (MPC_open=True), cover opens (MPC_isOpen=True)"
+        },
+        {
+          "from": "MPC_isOpen",
+          "to": "MPA_toWorkPos",
+          "mechanism": "MPC_isOpen_MPA_toWorkPos",
+          "description": "When cover is open (MPC_isOpen=True), axis can be commanded to working position (MPA_toWorkPos=True)"
+        },
+        {
+          "from": "MPA_toWorkPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_toWorkPos_Monitoring",
+          "description": "When axis is commanded to working position (MPA_toWorkPos=True) but does not reach it in time (MPA_WorkPos=False),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_toWorkPos",
+          "to": "MPA_WorkPos",
+          "mechanism": "MPA_toWorkPos_MPA_WorkPos",
+          "description": "When axis is commanded to working position (MPA_toWorkPos=True), it moves to working position (MPA_WorkPos=True)"
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MP_Inactive",
+          "mechanism": "MPA_WorkPos_MP_Inactive",
+          "description": "When axis is in working position (MPA_WorkPos=True), measuring probe can be activated (MP_Inactive=False)"
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_WorkPos_Monitoring",
+          "description": "When axis is not reaching work pos in time (MPA_WorkPos=False), besides being commanded to (MPA_toWorkPos=True),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701125",
+          "mechanism": "MPA_WorkPos_BothEndPosSensors",
+          "description": "When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),\n                        alarm 701125 is triggered."
+        }
+      ]
+    },
+    {
+      "root_cause": "MPA_WorkPos",
+      "propagation": [
+        {
+          "from": "MPA_WorkPos",
+          "to": "MP_Inactive",
+          "mechanism": "MPA_WorkPos_MP_Inactive",
+          "description": "When axis is in working position (MPA_WorkPos=True), measuring probe can be activated (MP_Inactive=False)"
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701124",
+          "mechanism": "MPA_WorkPos_Monitoring",
+          "description": "When axis is not reaching work pos in time (MPA_WorkPos=False), besides being commanded to (MPA_toWorkPos=True),\n                        end position not reached alarm 701124 is triggered."
+        },
+        {
+          "from": "MPA_WorkPos",
+          "to": "MPA_A_701125",
+          "mechanism": "MPA_WorkPos_BothEndPosSensors",
+          "description": "When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),\n                        alarm 701125 is triggered."
+        },
+        {
+          "from": "MPA_A_701124",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701124_to_WarnWithStacklight",
+          "description": "Measuring probe end position not reached alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "MPA_A_701125",
+          "to": "M_WarnWithStacklight",
+          "mechanism": "MPA_A_701125_to_WarnWithStacklight",
+          "description": "Measuring probe both end position sensors active alarm triggers a warning with stacklight."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Green",
+          "mechanism": "WarnWithStacklight_to_SL_Green",
+          "description": "A warning with stacklight can affect the green light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Red",
+          "mechanism": "WarnWithStacklight_to_SL_Red",
+          "description": "A warning with stacklight can affect the red light state (e.g., blinking)."
+        },
+        {
+          "from": "M_WarnWithStacklight",
+          "to": "SL_Yellow",
+          "mechanism": "WarnWithStacklight_to_SL_Yellow",
+          "description": "A warning with stacklight can affect the yellow light state (e.g., blinking)."
+        }
+      ]
+    }
+  ],
+  "timing_stats": {
+    "detection_delay_sec": {
+      "count": 34,
+      "mean": 22.45329411764706,
+      "min": 11.278999999999996,
+      "max": 40.212,
+      "median": 20.151999999999987
+    },
+    "diagnosis_delay_sec": {
+      "count": 34,
+      "mean": 45.641558823529394,
+      "min": 19.995999999999995,
+      "max": 64.393,
+      "median": 44.387
+    },
+    "resolution_delay_sec": {
+      "count": 34,
+      "mean": 71.27926470588235,
+      "min": 31.717,
+      "max": 99.792,
+      "median": 76.21300000000001
+    },
+    "total_runs": 34
+  }
+}

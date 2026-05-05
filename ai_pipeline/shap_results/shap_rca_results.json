@@ -1,0 +1,578 @@
+{
+  "method": "shap_tree_explainer",
+  "global": {
+    "features": [
+      "Hyd_Pressure",
+      "M_PowerOnDuration",
+      "Prog_CuttingTime",
+      "Prog_CycleTime",
+      "Prog_LineNo",
+      "Spd_ActPos_C",
+      "Spd_ActPos_X",
+      "Spd_ActPos_Z",
+      "Spd_ActSpeed_C",
+      "Spd_ActSpeed_X",
+      "Spd_ActSpeed_Z",
+      "CLF_A_700307",
+      "CLT_A_700310",
+      "F_A_700313",
+      "HP_A_700304",
+      "LP_A_700301",
+      "LT_A_700317",
+      "Hyd_A_700202",
+      "Hyd_A_700203",
+      "Hyd_A_700204",
+      "Hyd_A_700205",
+      "Hyd_A_700206",
+      "Hyd_A_700207",
+      "Hyd_A_700208",
+      "MPA_A_701124",
+      "MPA_A_701125",
+      "Prog_A_701330",
+      "SR_A_67040",
+      "T_A_701309",
+      "CBC_Closed",
+      "CBC_close",
+      "CBC_isOpen",
+      "CBC_open",
+      "CLF_Filter_Ok",
+      "CLT_Level_lt_Min",
+      "ExU_On",
+      "ExU_isOff",
+      "HP_On",
+      "HP_isOff",
+      "Hyd_Fan_On",
+      "Hyd_Fan_isOff",
+      "Hyd_Motor_On",
+      "Hyd_Motor_isOff",
+      "Hyd_Motor_isRotating",
+      "LP_On",
+      "LP_isOff",
+      "M_CoolProg",
+      "M_M08",
+      "M_isActive",
+      "M_isReady",
+      "M_isRotating",
+      "Prog_Active",
+      "Prog_Idle",
+      "Prog_Status",
+      "Spd_isCommandedPos_C",
+      "Spd_isCommandedPos_X",
+      "Spd_isCommandedPos_Z",
+      "Spd_isInPos_C",
+      "Spd_isInPos_X"
+    ],
+    "importance": [
+      0.0061934771947562695,
+      0.16592486202716827,
+      2.4162588119506836,
+      0.03235829249024391,
+      0.12700164318084717,
+      0.03881418704986572,
+      0.0488605871796608,
+      0.10964236408472061,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.005949798505753279,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.001077792840078473,
+      0.0,
+      0.0,
+      0.011239871382713318,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.050634440034627914,
+      0.0,
+      0.0,
+      0.2417358011007309,
+      0.024999339133501053,
+      0.0026607040781527758,
+      0.8129427433013916,
+      0.0,
+      0.001107009476982057,
+      0.241653174161911,
+      0.1065904051065445,
+      0.18903039395809174,
+      0.005765670910477638,
+      0.0,
+      0.0,
+      0.0,
+      0.04252985864877701,
+      0.006280810106545687,
+      0.04624882712960243,
+      0.0,
+      0.001154049183242023,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "top_15": [
+      {
+        "rank": 1,
+        "feature": "Prog_CuttingTime",
+        "mean_abs_shap": 2.4162588119506836
+      },
+      {
+        "rank": 2,
+        "feature": "Hyd_Motor_On",
+        "mean_abs_shap": 0.8129427433013916
+      },
+      {
+        "rank": 3,
+        "feature": "HP_isOff",
+        "mean_abs_shap": 0.2417358011007309
+      },
+      {
+        "rank": 4,
+        "feature": "LP_On",
+        "mean_abs_shap": 0.241653174161911
+      },
+      {
+        "rank": 5,
+        "feature": "M_CoolProg",
+        "mean_abs_shap": 0.18903039395809174
+      },
+      {
+        "rank": 6,
+        "feature": "M_PowerOnDuration",
+        "mean_abs_shap": 0.16592486202716827
+      },
+      {
+        "rank": 7,
+        "feature": "Prog_LineNo",
+        "mean_abs_shap": 0.12700164318084717
+      },
+      {
+        "rank": 8,
+        "feature": "Spd_ActPos_Z",
+        "mean_abs_shap": 0.10964236408472061
+      },
+      {
+        "rank": 9,
+        "feature": "LP_isOff",
+        "mean_abs_shap": 0.1065904051065445
+      },
+      {
+        "rank": 10,
+        "feature": "ExU_On",
+        "mean_abs_shap": 0.050634440034627914
+      },
+      {
+        "rank": 11,
+        "feature": "Spd_ActPos_X",
+        "mean_abs_shap": 0.0488605871796608
+      },
+      {
+        "rank": 12,
+        "feature": "Prog_Status",
+        "mean_abs_shap": 0.04624882712960243
+      },
+      {
+        "rank": 13,
+        "feature": "Prog_Active",
+        "mean_abs_shap": 0.04252985864877701
+      },
+      {
+        "rank": 14,
+        "feature": "Spd_ActPos_C",
+        "mean_abs_shap": 0.03881418704986572
+      },
+      {
+        "rank": 15,
+        "feature": "Prog_CycleTime",
+        "mean_abs_shap": 0.03235829249024391
+      }
+    ]
+  },
+  "subsystems": {
+    "coolant": {
+      "n_fault_samples": 0,
+      "top_features": [
+        {
+          "feature": "Spd_isInPos_X",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Spd_isInPos_C",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Spd_isCommandedPos_Z",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Spd_isCommandedPos_X",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Spd_isCommandedPos_C",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Prog_Status",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Prog_Idle",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Prog_Active",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "M_isRotating",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "M_isReady",
+          "mean_abs_shap": NaN
+        }
+      ],
+      "sample_explanation": [
+        {
+          "feature": "Prog_CuttingTime",
+          "shap_value": -3.290113687515259,
+          "feature_value": 7830237.617
+        },
+        {
+          "feature": "M_PowerOnDuration",
+          "shap_value": 0.1515389233827591,
+          "feature_value": 46073.0
+        },
+        {
+          "feature": "Spd_ActPos_X",
+          "shap_value": -0.05383992940187454,
+          "feature_value": 155.006
+        },
+        {
+          "feature": "Prog_LineNo",
+          "shap_value": -0.03653945028781891,
+          "feature_value": 322.0
+        },
+        {
+          "feature": "Spd_ActPos_C",
+          "shap_value": 0.008382288739085197,
+          "feature_value": 30.0
+        }
+      ],
+      "root_causes": [
+        {
+          "root_cause": "Spd_isInPos_X",
+          "path": [
+            {
+              "node": "Spd_isInPos_X",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        },
+        {
+          "root_cause": "Spd_isInPos_C",
+          "path": [
+            {
+              "node": "Spd_isInPos_C",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        },
+        {
+          "root_cause": "Spd_isCommandedPos_Z",
+          "path": [
+            {
+              "node": "Spd_isCommandedPos_Z",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        },
+        {
+          "root_cause": "Spd_isCommandedPos_X",
+          "path": [
+            {
+              "node": "Spd_isCommandedPos_X",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        },
+        {
+          "root_cause": "Spd_isCommandedPos_C",
+          "path": [
+            {
+              "node": "Spd_isCommandedPos_C",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        }
+      ]
+    },
+    "hydraulics": {
+      "n_fault_samples": 0,
+      "top_features": [
+        {
+          "feature": "Spd_isInPos_X",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Spd_isInPos_C",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Spd_isCommandedPos_Z",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Spd_isCommandedPos_X",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Spd_isCommandedPos_C",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Prog_Status",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Prog_Idle",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Prog_Active",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "M_isRotating",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "M_isReady",
+          "mean_abs_shap": NaN
+        }
+      ],
+      "sample_explanation": [
+        {
+          "feature": "Hyd_Motor_On",
+          "shap_value": -2.017667293548584,
+          "feature_value": 0.0
+        },
+        {
+          "feature": "HP_isOff",
+          "shap_value": 0.9797325134277344,
+          "feature_value": 0.0
+        },
+        {
+          "feature": "LP_On",
+          "shap_value": -0.6871939301490784,
+          "feature_value": 0.0
+        },
+        {
+          "feature": "M_PowerOnDuration",
+          "shap_value": -0.46465808153152466,
+          "feature_value": 46073.0
+        },
+        {
+          "feature": "LP_isOff",
+          "shap_value": -0.4263420104980469,
+          "feature_value": 0.0
+        }
+      ],
+      "root_causes": [
+        {
+          "root_cause": "Spd_isInPos_X",
+          "path": [
+            {
+              "node": "Spd_isInPos_X",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        },
+        {
+          "root_cause": "Spd_isInPos_C",
+          "path": [
+            {
+              "node": "Spd_isInPos_C",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        },
+        {
+          "root_cause": "Spd_isCommandedPos_Z",
+          "path": [
+            {
+              "node": "Spd_isCommandedPos_Z",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        },
+        {
+          "root_cause": "Spd_isCommandedPos_X",
+          "path": [
+            {
+              "node": "Spd_isCommandedPos_X",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        },
+        {
+          "root_cause": "Spd_isCommandedPos_C",
+          "path": [
+            {
+              "node": "Spd_isCommandedPos_C",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        }
+      ]
+    },
+    "probe": {
+      "n_fault_samples": 0,
+      "top_features": [
+        {
+          "feature": "Spd_isInPos_X",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Spd_isInPos_C",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Spd_isCommandedPos_Z",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Spd_isCommandedPos_X",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Spd_isCommandedPos_C",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Prog_Status",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Prog_Idle",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "Prog_Active",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "M_isRotating",
+          "mean_abs_shap": NaN
+        },
+        {
+          "feature": "M_isReady",
+          "mean_abs_shap": NaN
+        }
+      ],
+      "sample_explanation": [
+        {
+          "feature": "Prog_CuttingTime",
+          "shap_value": -3.0872979164123535,
+          "feature_value": 7830237.617
+        },
+        {
+          "feature": "Hyd_Motor_On",
+          "shap_value": 1.225923776626587,
+          "feature_value": 0.0
+        },
+        {
+          "feature": "LP_On",
+          "shap_value": 0.28773123025894165,
+          "feature_value": 0.0
+        },
+        {
+          "feature": "Spd_ActPos_Z",
+          "shap_value": -0.1871296614408493,
+          "feature_value": 384.666
+        },
+        {
+          "feature": "Prog_CycleTime",
+          "shap_value": -0.06010212376713753,
+          "feature_value": 11762.224
+        }
+      ],
+      "root_causes": [
+        {
+          "root_cause": "Spd_isInPos_X",
+          "path": [
+            {
+              "node": "Spd_isInPos_X",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        },
+        {
+          "root_cause": "Spd_isInPos_C",
+          "path": [
+            {
+              "node": "Spd_isInPos_C",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        },
+        {
+          "root_cause": "Spd_isCommandedPos_Z",
+          "path": [
+            {
+              "node": "Spd_isCommandedPos_Z",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        },
+        {
+          "root_cause": "Spd_isCommandedPos_X",
+          "path": [
+            {
+              "node": "Spd_isCommandedPos_X",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        },
+        {
+          "root_cause": "Spd_isCommandedPos_C",
+          "path": [
+            {
+              "node": "Spd_isCommandedPos_C",
+              "edge": "start",
+              "comment": "initial feature"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

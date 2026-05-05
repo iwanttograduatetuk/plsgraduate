@@ -9,6 +9,7 @@ data:
     apiVersion: 1
     datasources:
       - name: InfluxDB
+        uid: InfluxDB
         type: influxdb
         access: proxy
         url: http://influxdb.monitoring.svc.cluster.local:8086
@@ -23,11 +24,12 @@ data:
         editable: true
 
       - name: PostgreSQL
+        uid: PostgreSQL
         type: postgres
         url: postgres.predictive-maintenance.svc.cluster.local:5432
-        user: postgres
+        user: cnc_user
         secureJsonData:
-          password: postgres
+          password: cnc_password
         jsonData:
           database: predictive_maintenance
           sslmode: disable
@@ -37,6 +39,7 @@ data:
         editable: true
 
       - name: Prometheus
+        uid: Prometheus
         type: prometheus
         access: proxy
         url: http://prometheus.monitoring.svc.cluster.local:9090
@@ -51,15 +54,15 @@ data:
   dashboards.yml: |
     apiVersion: 1
     providers:
-      - name: 'CNC 예지보전'
+      - name: 'CNC'
         orgId: 1
-        folder: 'CNC 예지보전'
+        folder: ''
         type: file
         disableDeletion: false
         editable: true
         updateIntervalSeconds: 30
         options:
-          path: /var/lib/grafana/dashboards
+          path: /grafana-dashboards
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -94,6 +97,8 @@ spec:
               value: "true"
             - name: GF_SECURITY_ALLOW_EMBEDDING
               value: "true"
+            - name: GF_SECURITY_CONTENT_SECURITY_POLICY
+              value: "false"
             - name: GF_INSTALL_PLUGINS
               value: "grafana-clock-panel,grafana-simple-json-datasource"
           volumeMounts:
@@ -102,7 +107,7 @@ spec:
             - name: dashboards-provider
               mountPath: /etc/grafana/provisioning/dashboards
             - name: dashboards
-              mountPath: /var/lib/grafana/dashboards
+              mountPath: /grafana-dashboards
             - name: grafana-storage
               mountPath: /var/lib/grafana
           resources:
@@ -127,7 +132,7 @@ spec:
             name: grafana-dashboards-provider
         - name: dashboards
           configMap:
-            name: grafana-dashboards-data
+            name: grafana-dashboards
         - name: grafana-storage
           emptyDir: {}
 ---
@@ -139,8 +144,7 @@ metadata:
 spec:
   selector:
     app: grafana
-  type: NodePort
+  type: LoadBalancer
   ports:
     - port: 3000
       targetPort: 3000
-      nodePort: 30300

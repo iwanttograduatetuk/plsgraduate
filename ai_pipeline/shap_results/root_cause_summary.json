@@ -1,0 +1,44 @@
+{
+  "coolant": {
+    "top_3_features": [
+      "Spd_isInPos_X",
+      "Spd_isInPos_C",
+      "Spd_isCommandedPos_Z"
+    ],
+    "root_causes": [
+      "Spd_isInPos_X",
+      "Spd_isInPos_C",
+      "Spd_isCommandedPos_Z",
+      "Spd_isCommandedPos_X",
+      "Spd_isCommandedPos_C"
+    ]
+  },
+  "hydraulics": {
+    "top_3_features": [
+      "Spd_isInPos_X",
+      "Spd_isInPos_C",
+      "Spd_isCommandedPos_Z"
+    ],
+    "root_causes": [
+      "Spd_isInPos_X",
+      "Spd_isInPos_C",
+      "Spd_isCommandedPos_Z",
+      "Spd_isCommandedPos_X",
+      "Spd_isCommandedPos_C"
+    ]
+  },
+  "probe": {
+    "top_3_features": [
+      "Spd_isInPos_X",
+      "Spd_isInPos_C",
+      "Spd_isCommandedPos_Z"
+    ],
+    "root_causes": [
+      "Spd_isInPos_X",
+      "Spd_isInPos_C",
+      "Spd_isCommandedPos_Z",
+      "Spd_isCommandedPos_X",
+      "Spd_isCommandedPos_C"
+    ]
+  }
+}

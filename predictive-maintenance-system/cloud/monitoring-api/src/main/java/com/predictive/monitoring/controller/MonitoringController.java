@@ -1,6 +1,5 @@
 package com.predictive.monitoring.controller;
 
-import com.predictive.monitoring.dto.CommandRequest;
 import com.predictive.monitoring.dto.MachineStatusDto;
 import com.predictive.monitoring.dto.SiteStatusDto;
 import com.predictive.monitoring.dto.SummaryDto;
@@ -9,9 +8,7 @@ import com.predictive.monitoring.entity.FaultDiagnosisResult;
 import com.predictive.monitoring.repository.AnomalyEventRepository;
 import com.predictive.monitoring.repository.FaultDiagnosisResultRepository;
 import com.predictive.monitoring.service.InfluxQueryService;
-import com.predictive.monitoring.service.MachineCommandService;
 import com.predictive.monitoring.service.MonitoringService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -41,14 +38,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class MonitoringController {
 
     private final MonitoringService monitoringService;
     private final InfluxQueryService influxQueryService;
     private final AnomalyEventRepository anomalyRepo;
     private final FaultDiagnosisResultRepository diagnosisRepo;
-    private final MachineCommandService commandService;
-
     // ── 지점 ──────────────────────────────────────────────────────────────────
 
     /**
@@ -149,22 +145,6 @@ public class MonitoringController {
     @GetMapping("/metrics/summary")
     public ResponseEntity<SummaryDto> getSummary() {
         return ResponseEntity.ok(monitoringService.getSummary());
-    }
-
-    // ── 기계 제어 ─────────────────────────────────────────────────────────────
-
-    /**
-     * 기계 제어 명령 (STOP / RESUME / ACK)
-     * POST /api/machines/{machineId}/command
-     * Body: { "command": "STOP", "reason": "...", "eventId": "..." }
-     */
-    @PostMapping("/machines/{machineId}/command")
-    public ResponseEntity<Map<String, Object>> sendCommand(
-            @PathVariable String machineId,
-            @Valid @RequestBody CommandRequest req
-    ) {
-        Map<String, Object> result = commandService.execute(machineId, req);
-        return ResponseEntity.ok(result);
     }
 
     // ── 헬스체크 ─────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@ Edge Agent — FastAPI 진입점
 실행:
   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-백그라운드에서 CNC 센서 데이터를 수집하여 LSTM 추론 후
+백그라운드에서 CNC 센서 데이터를 수집하여 LSTM + XGBoost 추론 후
 이상 감지 시 Kafka에 이벤트를 발행합니다.
 
 재학습/재배포 확장 포인트:
@@ -19,7 +19,6 @@ import logging
 import pickle
 import time
 from contextlib import asynccontextmanager
-from enum import Enum
 from typing import Optional
 
 import numpy as np
@@ -32,6 +31,7 @@ from .collector import create_collector
 from .preprocessor import Preprocessor
 from .inference.lstm_engine import ModelRegistry, infer_window
 from .inference.anomaly_scorer import compute_score, MachineScore
+from .inference.xgboost_engine import XGBoostEngine, XGBoostPrediction, XGBOOST_FEATURES
 from .producer.kafka_producer import EdgeKafkaProducer
 
 # ── 로깅 설정 ──────────────────────────────────────────────────────────────────
@@ -43,8 +43,12 @@ logger = logging.getLogger("edge-agent")
 
 # ── 전역 상태 ──────────────────────────────────────────────────────────────────
 registry: Optional[ModelRegistry] = None
+xgb_engine: Optional[XGBoostEngine] = None
+xgb_feat_indices: Optional[list] = None  # preprocessor 89개 중 XGBoost 59개 인덱스
 preprocessor: Optional[Preprocessor] = None
 producer: Optional[EdgeKafkaProducer] = None
+col_min: Optional[np.ndarray] = None    # min-max scaler min (역정규화용)
+col_range: Optional[np.ndarray] = None  # min-max scaler range (역정규화용)
 
 # 최근 10초 평균 점수 (헬스 체크용)
 _last_scores: dict = {}
@@ -53,28 +57,14 @@ _anomaly_count: int = 0
 _last_telemetry_time: float = 0.0
 
 # 기계 제어 상태 (REPLAY_AUTO_START=true 환경변수로 자동 시작 가능)
-import os
-_machine_paused: bool = os.environ.get("REPLAY_AUTO_START", "false").lower() != "true"
-
-
-# ── 기계 제어 DTO ──────────────────────────────────────────────────────────────
-
-class CommandEnum(str, Enum):
-    STOP   = "STOP"
-    RESUME = "RESUME"
-    ACK    = "ACK"
-
-class CommandPayload(BaseModel):
-    command: CommandEnum
-    reason:  Optional[str] = None
-    eventId: Optional[str] = None
+_machine_paused: bool = not settings.replay_auto_start
 
 
 # ── Lifespan (시작/종료) ───────────────────────────────────────────────────────
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global registry, preprocessor, producer
+    global registry, preprocessor, producer, xgb_engine, xgb_feat_indices, col_min, col_range
 
     logger.info("=" * 55)
     logger.info("Edge Agent 시작  site=%s  machine=%s", settings.site_id, settings.machine_id)
@@ -86,19 +76,39 @@ async def lifespan(app: FastAPI):
         window_size=settings.data.window_size,
     )
 
-    # scaler_info에서 col_min, col_range 꺼내기
+    # scaler_info에서 col_min, col_range 꺼내기 (없으면 identity 정규화)
+    import json
     scaler_path = settings.data.processed_data_dir / "scaler_info.pkl"
-    with open(scaler_path, "rb") as f:
-        scaler = pickle.load(f)
-    col_min   = scaler["min"].astype(np.float32)
-    col_range = scaler["range"].astype(np.float32)
-    col_range[col_range == 0] = 1.0
+    if scaler_path.exists():
+        with open(scaler_path, "rb") as f:
+            scaler = pickle.load(f)
+        col_min   = scaler["min"].astype(np.float32)
+        col_range = scaler["range"].astype(np.float32)
+        col_range[col_range == 0] = 1.0
+    else:
+        logger.warning("scaler_info.pkl 없음 — identity 정규화 사용 (데모 모드)")
+        col_min   = np.zeros(89, dtype=np.float32)
+        col_range = np.ones(89, dtype=np.float32)
 
     # 2. 모델 레지스트리 초기화
-    import json
     meta_path = settings.data.processed_data_dir / "meta.json"
-    with open(meta_path) as f:
-        meta = json.load(f)
+    if meta_path.exists():
+        with open(meta_path) as f:
+            meta = json.load(f)
+    else:
+        logger.warning("meta.json 없음 — 서브시스템 피처 인덱스 자동 할당 (데모 모드)")
+        # 데모 모드: CSV replay의 피처 이름을 모르므로
+        # preprocessor의 feature_names가 실제 이름이면 그걸 쓰고,
+        # 아니면 89개 더미 이름 사용
+        demo_feature_names = preprocessor.feature_names if preprocessor else [f"feat_{i}" for i in range(89)]
+        meta = {
+            "feature_names": demo_feature_names,
+            "subsystem_info": {
+                "coolant":    {"indices": list(range(0, 15))},
+                "hydraulics": {"indices": list(range(15, 34))},
+                "probe":      {"indices": list(range(34, 45))},
+            },
+        }
 
     import torch
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -111,10 +121,24 @@ async def lifespan(app: FastAPI):
     )
     registry.load_all(version=settings.model.version)
 
+    # 2-1. XGBoost 엔진 초기화
+    xgb_engine = XGBoostEngine(model_path=settings.model.model_dir / "xgboost_fault_classifier.json")
+    xgb_engine.load()
+
+    # 2-2. XGBoost 피처 인덱스 매핑 (preprocessor 89개 → XGBoost 59개)
+    xgb_feat_indices = []
+    feat_name_to_idx = {name: i for i, name in enumerate(preprocessor.feature_names)}
+    for xgb_feat in XGBOOST_FEATURES:
+        idx = feat_name_to_idx.get(xgb_feat, -1)
+        xgb_feat_indices.append(idx)
+    matched = sum(1 for i in xgb_feat_indices if i >= 0)
+    logger.info("XGBoost 피처 매핑: %d/%d matched", matched, len(XGBOOST_FEATURES))
+
     # 3. Kafka 프로듀서
     producer = EdgeKafkaProducer(
         bootstrap_servers=settings.kafka.bootstrap_servers,
-        topic_anomaly=settings.kafka.topic_anomaly_events,
+        topic_anomaly_critical=settings.kafka.topic_anomaly_critical,
+        topic_anomaly_low=settings.kafka.topic_anomaly_low,
         topic_telemetry=settings.kafka.topic_sensor_telemetry,
         acks=settings.kafka.acks,
         retries=settings.kafka.retries,
@@ -154,8 +178,9 @@ async def lifespan(app: FastAPI):
 
 async def _inference_loop(collector, device) -> None:
     """
-    CNC 센서 데이터를 읽어 LSTM 추론 후:
-    - 이상 시 Kafka anomaly-events 발행
+    CNC 센서 데이터를 읽어 LSTM + XGBoost 추론 후:
+    - LSTM 이상 시 Kafka anomaly-events-critical 발행
+    - XGBoost만 이상 시 Kafka anomaly-events-low 발행
     - 30초마다 Kafka sensor-telemetry 발행
     """
     global _inference_count, _anomaly_count, _last_scores, _last_telemetry_time
@@ -163,83 +188,152 @@ async def _inference_loop(collector, device) -> None:
     _last_telemetry_time = time.monotonic()
     telemetry_interval = settings.kafka.telemetry_interval_sec
 
-    async for row in collector.stream():
-        # STOP 명령 시 추론 일시 중단 (데이터 수집은 유지)
-        if _machine_paused:
-            await asyncio.sleep(0.5)
-            continue
+    try:
+        async for row in collector.stream():
+            try:
+                # STOP 명령 시 추론 일시 중단 (데이터 수집은 유지)
+                if _machine_paused:
+                    await asyncio.sleep(0.5)
+                    continue
 
-        # 전처리기에 row 주입 (이미 정규화된 배열)
-        preprocessor.push_row(row)
+                # 전처리기에 row 주입 (이미 정규화된 배열)
+                preprocessor.push_row(row)
 
-        if not preprocessor.is_ready():
-            continue
+                if not preprocessor.is_ready():
+                    continue
 
-        window = preprocessor.get_window()   # (T, 89)
-        _inference_count += 1
+                window = preprocessor.get_window()   # (T, N_FEAT)
+                _inference_count += 1
 
-        # ── 3개 서브시스템 병렬 추론 ───────────────────────────────────────────
-        scores = {}
-        for name in ("coolant", "hydraulics", "probe"):
-            entry = registry.get(name)
-            if entry is None:
+                # 워밍업: 첫 N회 추론은 점수 무시 (버퍼 과도기)
+                WARMUP_COUNT = 60
+                if _inference_count <= WARMUP_COUNT:
+                    if _inference_count == WARMUP_COUNT:
+                        logger.info("워밍업 완료 (%d회) — 이상 탐지 시작", WARMUP_COUNT)
+                    continue
+
+                if _inference_count % 100 == 0:
+                    logger.info("추론 #%d 진행 중...", _inference_count)
+
+                # ── 3개 서브시스템 병렬 추론 (LSTM) ──
+                scores = {}
+                for name in ("coolant", "hydraulics", "probe"):
+                    entry = registry.get(name)
+                    if entry is None:
+                        continue
+                    error = infer_window(entry, window, device)
+                    feat_vals = preprocessor.get_last_raw_values(
+                        entry.feat_indices is not None
+                        and [preprocessor.feature_names[i] for i in entry.feat_indices]
+                        or []
+                    )
+                    thr_override = getattr(
+                        settings.model,
+                        f"threshold_override_{name}",
+                        None,
+                    )
+                    scores[name] = compute_score(
+                        name=name,
+                        reconstruction_error=error,
+                        threshold=entry.threshold_3sigma,
+                        threshold_override=thr_override,
+                        feature_values=feat_vals,
+                    )
+
+                if len(scores) < 3:
+                    continue
+
+                machine_score = MachineScore(
+                    coolant=scores["coolant"],
+                    hydraulics=scores["hydraulics"],
+                    probe=scores["probe"],
+                )
+                _last_scores = machine_score.to_telemetry_payload()
+
+                # ── XGBoost 추론 ──
+                xgb_prediction: Optional[XGBoostPrediction] = None
+                if xgb_engine is not None and xgb_engine.is_loaded and xgb_feat_indices is not None:
+                    try:
+                        last_row = window[-1]
+                        last_row_raw = last_row * col_range + col_min
+                        xgb_input = np.array(
+                            [last_row_raw[i] if i >= 0 else 0.0 for i in xgb_feat_indices],
+                            dtype=np.float32,
+                        )
+                        xgb_prediction = xgb_engine.predict(xgb_input)
+                    except Exception as e:
+                        logger.debug("XGBoost 추론 실패: %s", e)
+
+                # ── XGBoost 59개 피처 스냅샷 (Cloud SHAP용) ──
+                xgb_feature_snapshot = {}
+                if xgb_feat_indices is not None:
+                    last_row_raw = window[-1] * col_range + col_min
+                    for feat_name, idx in zip(XGBOOST_FEATURES, xgb_feat_indices):
+                        xgb_feature_snapshot[feat_name] = round(float(last_row_raw[idx] if idx >= 0 else 0.0), 4)
+
+                # ── 의사결정 로직 ──
+                lstm_abnormal_subs = machine_score.anomalous_subsystems
+                lstm_is_abnormal = len(lstm_abnormal_subs) > 0
+                xgb_is_fault = xgb_prediction is not None and xgb_prediction.is_fault
+
+                if lstm_is_abnormal:
+                    for sub_score in lstm_abnormal_subs:
+                        _anomaly_count += 1
+                        logger.warning(
+                            "[이상감지][CRITICAL] subsystem=%s score=%.3f xgb=%s",
+                            sub_score.name, sub_score.anomaly_score,
+                            xgb_prediction.predicted_label if xgb_prediction else "N/A",
+                        )
+                        if producer:
+                            producer.send_anomaly_event(
+                                site_id=settings.site_id,
+                                machine_id=settings.machine_id,
+                                score=sub_score,
+                                priority="critical",
+                                xgb_prediction=xgb_prediction,
+                                xgb_feature_values=xgb_feature_snapshot,
+                            )
+                elif xgb_is_fault:
+                    _anomaly_count += 1
+                    logger.warning(
+                        "[이상감지][LOW] xgb=%s",
+                        xgb_prediction.predicted_label if xgb_prediction else "N/A",
+                    )
+                    if producer:
+                        producer.send_anomaly_event(
+                            site_id=settings.site_id,
+                            machine_id=settings.machine_id,
+                            score=None,
+                            priority="low",
+                            xgb_prediction=xgb_prediction,
+                            xgb_feature_values=xgb_feature_snapshot,
+                        )
+
+                # ── 텔레메트리 주기 발행 ──
+                now = time.monotonic()
+                if now - _last_telemetry_time >= telemetry_interval:
+                    if producer:
+                        producer.send_telemetry(
+                            site_id=settings.site_id,
+                            machine_id=settings.machine_id,
+                            machine_score=machine_score,
+                        )
+                    _last_telemetry_time = now
+
+            except Exception as e:
+                logger.error("추론 루프 내부 오류: %s", e, exc_info=True)
+                await asyncio.sleep(0.1)
                 continue
-            error = infer_window(entry, window, device)
-            feat_vals = preprocessor.get_last_raw_values(
-                entry.feat_indices is not None
-                and [preprocessor.feature_names[i] for i in entry.feat_indices]
-                or []
-            )
-            thr_override = getattr(
-                settings.model,
-                f"threshold_override_{name}",
-                None,
-            )
-            scores[name] = compute_score(
-                name=name,
-                reconstruction_error=error,
-                threshold=entry.threshold_3sigma,
-                threshold_override=thr_override,
-                feature_values=feat_vals,
-            )
 
-        if len(scores) < 3:
-            continue
-
-        machine_score = MachineScore(
-            coolant=scores["coolant"],
-            hydraulics=scores["hydraulics"],
-            probe=scores["probe"],
-        )
-        _last_scores = machine_score.to_telemetry_payload()
-
-        # ── 이상 이벤트 즉시 발행 ─────────────────────────────────────────────
-        for sub_score in machine_score.anomalous_subsystems:
-            _anomaly_count += 1
-            if producer:
-                producer.send_anomaly_event(
-                    site_id=settings.site_id,
-                    machine_id=settings.machine_id,
-                    score=sub_score,
-                )
-
-        # ── 텔레메트리 주기 발행 ──────────────────────────────────────────────
-        now = time.monotonic()
-        if now - _last_telemetry_time >= telemetry_interval:
-            if producer:
-                producer.send_telemetry(
-                    site_id=settings.site_id,
-                    machine_id=settings.machine_id,
-                    machine_score=machine_score,
-                )
-            _last_telemetry_time = now
+    except Exception as e:
+        logger.error("추론 루프 치명적 오류: %s", e, exc_info=True)
 
 
 # ── FastAPI 앱 ─────────────────────────────────────────────────────────────────
 
 app = FastAPI(
     title="CNC Edge Agent",
-    description="LSTM 기반 실시간 이상 탐지 & Kafka 이벤트 발행",
+    description="LSTM + XGBoost 기반 실시간 이상 탐지 & Kafka 이벤트 발행",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -310,56 +404,3 @@ async def get_scores():
     if not _last_scores:
         return {"status": "warming_up", "message": "윈도우 채우는 중..."}
     return _last_scores
-
-
-# ── 기계 제어 명령 ────────────────────────────────────────────────────────────
-
-@app.post("/command")
-async def machine_command(payload: CommandPayload):
-    """
-    Spring Boot monitoring-api → Edge Agent 기계 제어 엔드포인트.
-
-    STOP   : 추론 루프 일시 중단 (센서 수집은 유지) + 실제 기계 정지 신호 전달
-    RESUME : 추론 루프 재개
-    ACK    : 이상 이벤트 확인 처리 (루프 상태 변경 없음)
-    """
-    global _machine_paused
-
-    cmd = payload.command
-
-    if cmd == CommandEnum.STOP:
-        _machine_paused = True
-        logger.warning(
-            "⛔ STOP 명령 수신 — machine=%s reason=%s eventId=%s",
-            settings.machine_id, payload.reason, payload.eventId,
-        )
-        # TODO: 실제 하드웨어 PLC/M-코드 인터페이스 연결 지점
-        machine_status = "STOPPED"
-
-    elif cmd == CommandEnum.RESUME:
-        _machine_paused = False
-        logger.info(
-            "▶ RESUME 명령 수신 — machine=%s reason=%s",
-            settings.machine_id, payload.reason,
-        )
-        machine_status = "RUNNING"
-
-    elif cmd == CommandEnum.ACK:
-        logger.info(
-            "✔ ACK 명령 수신 — machine=%s eventId=%s",
-            settings.machine_id, payload.eventId,
-        )
-        # 루프 상태는 그대로 유지
-        machine_status = "STOPPED" if _machine_paused else "RUNNING"
-
-    else:
-        raise HTTPException(status_code=400, detail=f"알 수 없는 명령: {cmd}")
-
-    return {
-        "machine_id":     settings.machine_id,
-        "command":        cmd,
-        "machine_status": machine_status,
-        "paused":         _machine_paused,
-        "reason":         payload.reason,
-        "event_id":       payload.eventId,
-    }

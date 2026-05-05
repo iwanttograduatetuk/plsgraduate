@@ -1,0 +1,106 @@
+======================================================================
+FAULT TREE: PROBE_SYSTEM_FAULT
+Subsystem: probe
+Total experiments: 6
+Total fault runs: 34
+======================================================================
+
+  Detection delay: mean=22.5s, min=11.3s, max=40.2s
+  Diagnosis delay: mean=45.6s, min=20.0s, max=64.4s
+  Resolution time: mean=71.3s, min=31.7s, max=99.8s
+
+FAULT SCENARIOS:
+--------------------------------------------------
+  [exp_1] A) WP suddenly switches to false (spontaneous sensor failure - MPA is no longer detected despite not moving) B) WP never becomes true (MPA is not recognized at working position after movement)
+    Root causes: MPA_WorkPos
+    Alarms:      MPA_A_701124
+    Diagnosis:   MPA_WorkPos Sensor is defective
+
+  [exp_2_3] A) IP suddenly switches to false (spontaneous sensor failure - MPA is no longer detected at initial position despite not moving) B) IP never becomes true (MPA is not recognized at initial position after movement)
+    Root causes: MPA_InitPos
+    Alarms:      MPA_A_701124
+    Diagnosis:   MPA_InitPos Sensor is defective
+
+  [exp_4] WP incorrectly remains true even after movement, while IP becomes true - the system can no longer determine the actual position of the MPA
+    Root causes: MPA_WorkPos
+    Alarms:      MPA_A_701125
+    Diagnosis:   MPA_WorkPos Sensor is defective
+
+  [exp_5] IP incorrectly remains true even after movement - the system falsely believes the MPA is still at initial position, despite it having moved
+    Root causes: MPA_InitPos
+    Alarms:      MPA_A_701125
+    Diagnosis:   MPA_InitPos Sensor is defective
+
+  [exp_6] IP remains true - no movement has occurred / the axis is stuck
+    Root causes: MPA_InitPos, MPA_WorkPos
+    Alarms:      MPA_A_701124
+    Diagnosis:   MPA is stuck -> does not move besides being commanded to.
+
+  [exp_7] WP remains true - no movement has occurred
+    Root causes: MPA_InitPos, MPA_WorkPos
+    Alarms:      MPA_A_701124
+    Diagnosis:   MPA is stuck = does not move besides being commanded to.
+
+CAUSAL PROPAGATION CHAINS:
+--------------------------------------------------
+  ROOT: MPA_WorkPos
+    MPA_WorkPos -> MP_Inactive
+      [MPA_WorkPos_MP_Inactive] When axis is in working position (MPA_WorkPos=True), measuring probe can be activated (MP_Inactive=False)
+    MPA_WorkPos -> MPA_A_701124
+      [MPA_WorkPos_Monitoring] When axis is not reaching work pos in time (MPA_WorkPos=False), besides being commanded to (MPA_toWorkPos=True),
+                        end position not reached alarm 701124 is triggered.
+    MPA_WorkPos -> MPA_A_701125
+      [MPA_WorkPos_BothEndPosSensors] When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),
+                        alarm 701125 is triggered.
+    MPA_A_701124 -> M_WarnWithStacklight
+      [MPA_A_701124_to_WarnWithStacklight] Measuring probe end position not reached alarm triggers a warning with stacklight.
+    MPA_A_701125 -> M_WarnWithStacklight
+      [MPA_A_701125_to_WarnWithStacklight] Measuring probe both end position sensors active alarm triggers a warning with stacklight.
+    M_WarnWithStacklight -> SL_Green
+      [WarnWithStacklight_to_SL_Green] A warning with stacklight can affect the green light state (e.g., blinking).
+    M_WarnWithStacklight -> SL_Red
+      [WarnWithStacklight_to_SL_Red] A warning with stacklight can affect the red light state (e.g., blinking).
+    M_WarnWithStacklight -> SL_Yellow
+      [WarnWithStacklight_to_SL_Yellow] A warning with stacklight can affect the yellow light state (e.g., blinking).
+
+  ROOT: MPA_InitPos
+    MPA_InitPos -> MPA_A_701124
+      [MPA_InitPos_Monitoring] When axis is not reaching initial pos in time (MPA_InitPos=False), besides being commanded to (MPA_toInitPos=True),
+                        end position not reached alarm 701124 is triggered.
+    MPA_InitPos -> MPA_A_701125
+      [MPA_InitPos_BothEndPosSensors] When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),
+                        alarm 701125 is triggered.
+    MPA_InitPos -> MPC_close
+      [MPA_InitPos_MPC_close] When axis is in initial position (MPA_InitPos=True), cover can be commanded to close (MPC_close=True)
+    MPA_A_701124 -> M_WarnWithStacklight
+      [MPA_A_701124_to_WarnWithStacklight] Measuring probe end position not reached alarm triggers a warning with stacklight.
+    MPA_A_701125 -> M_WarnWithStacklight
+      [MPA_A_701125_to_WarnWithStacklight] Measuring probe both end position sensors active alarm triggers a warning with stacklight.
+    MPC_close -> MPC_Closed
+      [MPC_close_MPC_Closed] When cover is commanded to close (MPC_close=True), cover closes (MPC_Closed=True)
+    MPC_close -> MPC_open
+      [MPC_close_MPC_open] When cover is not commanded to close (MPC_close=False),
+                                it can be commanded to open (MPC_open=True)
+    M_WarnWithStacklight -> SL_Green
+      [WarnWithStacklight_to_SL_Green] A warning with stacklight can affect the green light state (e.g., blinking).
+    M_WarnWithStacklight -> SL_Red
+      [WarnWithStacklight_to_SL_Red] A warning with stacklight can affect the red light state (e.g., blinking).
+    M_WarnWithStacklight -> SL_Yellow
+      [WarnWithStacklight_to_SL_Yellow] A warning with stacklight can affect the yellow light state (e.g., blinking).
+    MPC_open -> MPC_isOpen
+      [MPC_open_MPC_isOpen] When cover is commanded to open (MPC_open=True), cover opens (MPC_isOpen=True)
+    MPC_isOpen -> MPA_toWorkPos
+      [MPC_isOpen_MPA_toWorkPos] When cover is open (MPC_isOpen=True), axis can be commanded to working position (MPA_toWorkPos=True)
+    MPA_toWorkPos -> MPA_A_701124
+      [MPA_toWorkPos_Monitoring] When axis is commanded to working position (MPA_toWorkPos=True) but does not reach it in time (MPA_WorkPos=False),
+                        end position not reached alarm 701124 is triggered.
+    MPA_toWorkPos -> MPA_WorkPos
+      [MPA_toWorkPos_MPA_WorkPos] When axis is commanded to working position (MPA_toWorkPos=True), it moves to working position (MPA_WorkPos=True)
+    MPA_WorkPos -> MP_Inactive
+      [MPA_WorkPos_MP_Inactive] When axis is in working position (MPA_WorkPos=True), measuring probe can be activated (MP_Inactive=False)
+    MPA_WorkPos -> MPA_A_701124
+      [MPA_WorkPos_Monitoring] When axis is not reaching work pos in time (MPA_WorkPos=False), besides being commanded to (MPA_toWorkPos=True),
+                        end position not reached alarm 701124 is triggered.
+    MPA_WorkPos -> MPA_A_701125
+      [MPA_WorkPos_BothEndPosSensors] When both end position sensors are triggered (MPA_WorkPos=True AND MPA_InitPos=True),
+                        alarm 701125 is triggered.

@@ -1,0 +1,41 @@
+{
+  "model_type": "xgboost",
+  "accuracy": 0.998158379373849,
+  "f1_macro": 0.9971108464558246,
+  "f1_weighted": 0.9981504185948201,
+  "confusion_matrix": [
+    [
+      343,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      49,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      82,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      68
+    ]
+  ],
+  "train_size": 2173,
+  "test_size": 543,
+  "n_features": 59,
+  "class_distribution": {
+    "normal": 1716,
+    "coolant_fault": 250,
+    "hydraulics_fault": 410,
+    "probe_fault": 340
+  }
+}

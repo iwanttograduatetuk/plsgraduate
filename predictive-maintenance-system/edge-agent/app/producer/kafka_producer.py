@@ -12,12 +12,13 @@ import json
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from kafka import KafkaProducer
 from kafka.errors import KafkaError
 
 from ..inference.anomaly_scorer import SubsystemScore, MachineScore
+from ..inference.xgboost_engine import XGBoostPrediction
 
 logger = logging.getLogger(__name__)
 
@@ -39,14 +40,16 @@ class EdgeKafkaProducer:
     def __init__(
         self,
         bootstrap_servers: str,
-        topic_anomaly: str = "anomaly-events",
+        topic_anomaly_critical: str = "anomaly-events-critical",
+        topic_anomaly_low: str = "anomaly-events-low",
         topic_telemetry: str = "sensor-telemetry",
         acks: str = "all",
         retries: int = 3,
         linger_ms: int = 5,
         compression_type: str = "gzip",
     ):
-        self._topic_anomaly   = topic_anomaly
+        self._topic_anomaly_critical = topic_anomaly_critical
+        self._topic_anomaly_low = topic_anomaly_low
         self._topic_telemetry = topic_telemetry
         self._connected = False
 
@@ -58,6 +61,9 @@ class EdgeKafkaProducer:
                 retries=retries,
                 linger_ms=linger_ms,
                 compression_type=compression_type,
+                max_block_ms=5000,
+                request_timeout_ms=5000,
+                metadata_max_age_ms=10000,
             )
             self._connected = True
             logger.info("Kafka Producer 연결 성공: %s", bootstrap_servers)
@@ -71,30 +77,66 @@ class EdgeKafkaProducer:
         self,
         site_id: str,
         machine_id: str,
-        score: SubsystemScore,
+        score: Optional[SubsystemScore] = None,
+        xgb_prediction: Optional[XGBoostPrediction] = None,
+        priority: str = "critical",
+        xgb_feature_values: Optional[dict] = None,
     ) -> str:
         """
-        이상 감지 즉시 발행.
-        반환값: event_id (UUID)
+        이상 감지 발행. priority에 따라 토픽 분기.
+
+        priority:
+          - "critical": LSTM 비정상 → anomaly-events-critical
+          - "low": XGBoost만 비정상 → anomaly-events-low (score=None 가능)
         """
         event_id = str(uuid.uuid4())
-        payload = {
-            "event_id":             event_id,
-            "event_type":           "ANOMALY_DETECTED",
-            "site_id":              site_id,
-            "machine_id":           machine_id,
-            "timestamp":            _now_iso(),
-            "subsystem":            score.name,
-            "reconstruction_error": round(score.reconstruction_error, 6),
-            "threshold_3sigma":     round(score.threshold, 6),
-            "anomaly_score":        round(score.anomaly_score, 4),
-            "severity":             score.severity,
-            "feature_values":       {k: round(v, 4) for k, v in score.feature_values.items()},
-        }
-        self._send(self._topic_anomaly, key=site_id, payload=payload)
+
+        if score is not None:
+            payload = {
+                "event_id":             event_id,
+                "event_type":           "ANOMALY_DETECTED",
+                "site_id":              site_id,
+                "machine_id":           machine_id,
+                "timestamp":            _now_iso(),
+                "subsystem":            score.name,
+                "reconstruction_error": round(score.reconstruction_error, 6),
+                "threshold_3sigma":     round(score.threshold, 6),
+                "anomaly_score":        round(score.anomaly_score, 4),
+                "severity":             score.severity,
+                "feature_values":       xgb_feature_values or {k: round(v, 4) for k, v in score.feature_values.items()},
+                "xgboost_label":        xgb_prediction.predicted_label if xgb_prediction else "unknown",
+                "xgboost_probabilities": xgb_prediction.probabilities if xgb_prediction else {},
+                "priority":             priority,
+            }
+            subsystem_name = score.name
+            anomaly_score = score.anomaly_score
+        else:
+            # XGBoost만 비정상 (LSTM 정상) — score 없음
+            payload = {
+                "event_id":             event_id,
+                "event_type":           "ANOMALY_SUSPECTED",
+                "site_id":              site_id,
+                "machine_id":           machine_id,
+                "timestamp":            _now_iso(),
+                "subsystem":            xgb_prediction.predicted_label if xgb_prediction else "unknown",
+                "reconstruction_error": 0.0,
+                "threshold_3sigma":     0.0,
+                "anomaly_score":        0.0,
+                "severity":             "LOW",
+                "feature_values":       xgb_feature_values or {},
+                "xgboost_label":        xgb_prediction.predicted_label if xgb_prediction else "unknown",
+                "xgboost_probabilities": xgb_prediction.probabilities if xgb_prediction else {},
+                "priority":             priority,
+            }
+            subsystem_name = xgb_prediction.predicted_label if xgb_prediction else "unknown"
+            anomaly_score = 0.0
+
+        topic = self._topic_anomaly_critical if priority == "critical" else self._topic_anomaly_low
+        self._send(topic, key=site_id, payload=payload)
         logger.warning(
-            "[이상감지] site=%s machine=%s subsystem=%s score=%.3f severity=%s",
-            site_id, machine_id, score.name, score.anomaly_score, score.severity,
+            "[이상감지][%s] site=%s machine=%s subsystem=%s score=%.3f xgb=%s",
+            priority.upper(), site_id, machine_id, subsystem_name,
+            anomaly_score, xgb_prediction.predicted_label if xgb_prediction else "N/A",
         )
         return event_id
 

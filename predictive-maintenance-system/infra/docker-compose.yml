@@ -193,7 +193,7 @@ services:
     environment:
       SITE_ID: site-A
       MACHINE_ID: cnc-001
-      KAFKA_BOOTSTRAP_SERVERS: 34.64.71.9:9093
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       DATA_REPLAY_MODE: "true"
       DATA_REPLAY_SPEED_FACTOR: "10.0"
       MODEL_VERSION: v1.0.0
@@ -221,7 +221,7 @@ services:
       influxdb:
         condition: service_healthy
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: 34.64.71.9:9093
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       INFLUXDB_URL: http://influxdb:8086
       INFLUXDB_TOKEN: my-token
       INFLUXDB_ORG: predictive-maintenance
@@ -240,7 +240,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: 34.64.71.9:9093
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/predictive_maintenance
     restart: unless-stopped
 
@@ -256,7 +256,7 @@ services:
     ports:
       - "8001:8001"
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: 34.64.71.9:9093
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MODEL_VERSION: v1.0.0
       LOG_LEVEL: INFO
       DATA_PROCESSED_DATA_DIR: /edge-agent/data/processed_data_v2
@@ -281,7 +281,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: 34.64.71.9:9093
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       DB_URL: jdbc:postgresql://postgres:5432/predictive_maintenance
       DB_USER: postgres
       DB_PASS: postgres

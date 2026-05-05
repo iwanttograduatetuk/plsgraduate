@@ -1,0 +1,357 @@
+{
+  "dataset": {
+    "real_op_files": 173,
+    "fault_groups": [
+      "exp_coolant",
+      "exp_hydraulics",
+      "exp_probe"
+    ],
+    "numeric_variables": 11,
+    "binary_variables": 76
+  },
+  "normal_stats": {
+    "Spd_ActPos_C": {
+      "count": 32765,
+      "mean": 168.72116332824658,
+      "std": 107.05682978057855,
+      "min": 0.0,
+      "max": 359.996,
+      "p01": 0.0,
+      "p05": 4.750400000000001,
+      "p25": 73.859,
+      "p50": 167.285,
+      "p75": 260.346,
+      "p95": 340.89119999999997,
+      "p99": 357.50336,
+      "thr_low_3sigma": -152.4493260134891,
+      "thr_high_3sigma": 489.89165266998225,
+      "thr_low_iqr": -205.87150000000003,
+      "thr_high_iqr": 540.0765
+    },
+    "Spd_ActSpeed_C": {
+      "count": 29656,
+      "mean": -134060.24285879757,
+      "std": 103872.74249298131,
+      "min": -839069.824,
+      "max": 90000.0,
+      "p01": -355838.1589,
+      "p05": -306364.746,
+      "p25": -199089.844,
+      "p50": -148572.51,
+      "p75": -36224.121,
+      "p95": 33932.875,
+      "p99": 43211.426,
+      "thr_low_3sigma": -445678.47033774154,
+      "thr_high_3sigma": 177557.98462014637,
+      "thr_low_iqr": -443388.42850000004,
+      "thr_high_iqr": 208074.4635
+    },
+    "Spd_ActPos_X": {
+      "count": 27600,
+      "mean": 114.79127838152174,
+      "std": 129.72166953409723,
+      "min": -2.685,
+      "max": 749.25,
+      "p01": -0.149,
+      "p05": 0.18395000000000003,
+      "p25": 60.31,
+      "p50": 84.76,
+      "p75": 148.467,
+      "p95": 321.37959999999987,
+      "p99": 740.0,
+      "thr_low_3sigma": -274.3737302207699,
+      "thr_high_3sigma": 503.9562869838134,
+      "thr_low_iqr": -71.9255,
+      "thr_high_iqr": 280.7025
+    },
+    "Spd_ActSpeed_X": {
+      "count": 24580,
+      "mean": -22.82695921816927,
+      "std": 6229.088476080727,
+      "min": -36000.0,
+      "max": 36000.0,
+      "p01": -32399.999,
+      "p05": -1000.0,
+      "p25": -45.02975,
+      "p50": 0.0,
+      "p75": 14.962,
+      "p95": 3380.112549999991,
+      "p99": 30000.0,
+      "thr_low_3sigma": -18710.092387460347,
+      "thr_high_3sigma": 18664.43846902401,
+      "thr_low_iqr": -135.017375,
+      "thr_high_iqr": 104.949625
+    },
+    "Spd_ActPos_Z": {
+      "count": 25666,
+      "mean": 338.29335378866983,
+      "std": 97.11137469320344,
+      "min": 0.0,
+      "max": 495.001,
+      "p01": 0.0,
+      "p05": 231.031,
+      "p25": 295.61375,
+      "p50": 351.8175,
+      "p75": 386.20675,
+      "p95": 495.0,
+      "p99": 495.0,
+      "thr_low_3sigma": 46.959229709059514,
+      "thr_high_3sigma": 629.6274778682802,
+      "thr_low_iqr": 159.72424999999996,
+      "thr_high_iqr": 522.09625
+    },
+    "Spd_ActSpeed_Z": {
+      "count": 23089,
+      "mean": 66.62950388164457,
+      "std": 5915.11077934925,
+      "min": -36000.0,
+      "max": 36000.0,
+      "p01": -26697.38464,
+      "p05": -2244.3059999999996,
+      "p25": -155.432,
+      "p50": -79.387,
+      "p75": 0.0,
+      "p95": 3780.0,
+      "p99": 32196.622359999987,
+      "thr_low_3sigma": -17678.702834166106,
+      "thr_high_3sigma": 17811.9618419294,
+      "thr_low_iqr": -388.5799999999999,
+      "thr_high_iqr": 233.14799999999997
+    },
+    "Prog_CuttingTime": {
+      "count": 32152,
+      "mean": 7705599.618208264,
+      "std": 1538669.1926387213,
+      "min": 0.0,
+      "max": 8104279.452,
+      "p01": 0.0,
+      "p05": 7830765.876999999,
+      "p25": 7982807.084000001,
+      "p50": 8014947.379,
+      "p75": 8081815.2515,
+      "p95": 8102045.014,
+      "p99": 8103981.538000001,
+      "thr_low_3sigma": 3089592.0402921,
+      "thr_high_3sigma": 12321607.196124427,
+      "thr_low_iqr": 7834294.832750002,
+      "thr_high_iqr": 8230327.50275
+    },
+    "Prog_CycleTime": {
+      "count": 70810,
+      "mean": 11250.81105344125,
+      "std": 15157.153326374619,
+      "min": 0.0,
+      "max": 273155.812172968,
+      "p01": 0.0,
+      "p05": 491.7263,
+      "p25": 2422.2905,
+      "p50": 7055.843,
+      "p75": 14330.352,
+      "p95": 39873.568,
+      "p99": 85485.79000000001,
+      "thr_low_3sigma": -34220.64892568261,
+      "thr_high_3sigma": 56722.271032565106,
+      "thr_low_iqr": -15439.801750000002,
+      "thr_high_iqr": 32192.44425
+    },
+    "M_PowerOnDuration": {
+      "count": 2662,
+      "mean": 15496.263335837715,
+      "std": 23423.865925097318,
+      "min": 0.0,
+      "max": 70622.0,
+      "p01": 0.0,
+      "p05": 0.0,
+      "p25": 0.0,
+      "p50": 322.5,
+      "p75": 27297.75,
+      "p95": 63852.95,
+      "p99": 69172.39,
+      "thr_low_3sigma": -54775.334439454244,
+      "thr_high_3sigma": 85767.86111112968,
+      "thr_low_iqr": -40946.625,
+      "thr_high_iqr": 68244.375
+    },
+    "Prog_LineNo": {
+      "count": 30124,
+      "mean": 347.3669167441243,
+      "std": 355.9260477443699,
+      "min": -2.0,
+      "max": 1150.0,
+      "p01": -2.0,
+      "p05": -2.0,
+      "p25": 75.0,
+      "p50": 191.0,
+      "p75": 499.0,
+      "p95": 1079.0,
+      "p99": 1104.0,
+      "thr_low_3sigma": -720.4112264889853,
+      "thr_high_3sigma": 1415.1450599772338,
+      "thr_low_iqr": -561.0,
+      "thr_high_iqr": 1135.0
+    },
+    "Hyd_Pressure": {
+      "count": 1237,
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p01": 0.0,
+      "p05": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "p95": 0.0,
+      "p99": 0.0,
+      "thr_low_3sigma": 0.0,
+      "thr_high_3sigma": 0.0,
+      "thr_low_iqr": 0.0,
+      "thr_high_iqr": 0.0
+    }
+  },
+  "thresholds": {
+    "Spd_ActPos_C": {
+      "normal_range_min": 0.0,
+      "normal_range_max": 357.5034,
+      "recommended_low_threshold": -152.4493,
+      "recommended_high_threshold": 489.8917,
+      "iqr_low_threshold": -205.8715,
+      "iqr_high_threshold": 540.0765,
+      "operating_mean": 168.7212,
+      "operating_std": 107.0568
+    },
+    "Spd_ActSpeed_C": {
+      "normal_range_min": -355838.1589,
+      "normal_range_max": 43211.426,
+      "recommended_low_threshold": -445678.4703,
+      "recommended_high_threshold": 177557.9846,
+      "iqr_low_threshold": -443388.4285,
+      "iqr_high_threshold": 208074.4635,
+      "operating_mean": -134060.2429,
+      "operating_std": 103872.7425
+    },
+    "Spd_ActPos_X": {
+      "normal_range_min": -0.149,
+      "normal_range_max": 740.0,
+      "recommended_low_threshold": -274.3737,
+      "recommended_high_threshold": 503.9563,
+      "iqr_low_threshold": -71.9255,
+      "iqr_high_threshold": 280.7025,
+      "operating_mean": 114.7913,
+      "operating_std": 129.7217
+    },
+    "Spd_ActSpeed_X": {
+      "normal_range_min": -32399.999,
+      "normal_range_max": 30000.0,
+      "recommended_low_threshold": -18710.0924,
+      "recommended_high_threshold": 18664.4385,
+      "iqr_low_threshold": -135.0174,
+      "iqr_high_threshold": 104.9496,
+      "operating_mean": -22.827,
+      "operating_std": 6229.0885
+    },
+    "Spd_ActPos_Z": {
+      "normal_range_min": 0.0,
+      "normal_range_max": 495.0,
+      "recommended_low_threshold": 46.9592,
+      "recommended_high_threshold": 629.6275,
+      "iqr_low_threshold": 159.7242,
+      "iqr_high_threshold": 522.0963,
+      "operating_mean": 338.2934,
+      "operating_std": 97.1114
+    },
+    "Spd_ActSpeed_Z": {
+      "normal_range_min": -26697.3846,
+      "normal_range_max": 32196.6224,
+      "recommended_low_threshold": -17678.7028,
+      "recommended_high_threshold": 17811.9618,
+      "iqr_low_threshold": -388.58,
+      "iqr_high_threshold": 233.148,
+      "operating_mean": 66.6295,
+      "operating_std": 5915.1108
+    },
+    "Prog_CuttingTime": {
+      "normal_range_min": 0.0,
+      "normal_range_max": 8103981.538,
+      "recommended_low_threshold": 3089592.0403,
+      "recommended_high_threshold": 12321607.1961,
+      "iqr_low_threshold": 7834294.8328,
+      "iqr_high_threshold": 8230327.5027,
+      "operating_mean": 7705599.6182,
+      "operating_std": 1538669.1926
+    },
+    "Prog_CycleTime": {
+      "normal_range_min": 0.0,
+      "normal_range_max": 85485.79,
+      "recommended_low_threshold": -34220.6489,
+      "recommended_high_threshold": 56722.271,
+      "iqr_low_threshold": -15439.8018,
+      "iqr_high_threshold": 32192.4443,
+      "operating_mean": 11250.8111,
+      "operating_std": 15157.1533
+    },
+    "M_PowerOnDuration": {
+      "normal_range_min": 0.0,
+      "normal_range_max": 69172.39,
+      "recommended_low_threshold": -54775.3344,
+      "recommended_high_threshold": 85767.8611,
+      "iqr_low_threshold": -40946.625,
+      "iqr_high_threshold": 68244.375,
+      "operating_mean": 15496.2633,
+      "operating_std": 23423.8659
+    },
+    "Prog_LineNo": {
+      "normal_range_min": -2.0,
+      "normal_range_max": 1104.0,
+      "recommended_low_threshold": -720.4112,
+      "recommended_high_threshold": 1415.1451,
+      "iqr_low_threshold": -561.0,
+      "iqr_high_threshold": 1135.0,
+      "operating_mean": 347.3669,
+      "operating_std": 355.926
+    },
+    "Hyd_Pressure": {
+      "normal_range_min": 0.0,
+      "normal_range_max": 0.0,
+      "recommended_low_threshold": 0.0,
+      "recommended_high_threshold": 0.0,
+      "iqr_low_threshold": 0.0,
+      "iqr_high_threshold": 0.0,
+      "operating_mean": 0.0,
+      "operating_std": 0.0
+    }
+  },
+  "plc_rules": {
+    "Hyd_Temp_lt_70": {
+      "threshold": 70,
+      "unit": "\u00b0C",
+      "condition": "temp < 70\u00b0C \u2192 True"
+    },
+    "Hyd_Temp_lt_80": {
+      "threshold": 80,
+      "unit": "\u00b0C",
+      "condition": "temp < 80\u00b0C \u2192 True"
+    },
+    "CLT_Level_lt_Min": {
+      "threshold": "min_level",
+      "unit": "level",
+      "condition": "level < min \u2192 True (fault)"
+    },
+    "M_ErrorActive": {
+      "threshold": "any_error",
+      "condition": "any alarm active \u2192 True"
+    },
+    "SL_Red": {
+      "threshold": "error_state",
+      "condition": "fault/stop \u2192 True"
+    },
+    "SL_Yellow": {
+      "threshold": "warning_state",
+      "condition": "warning present \u2192 True"
+    },
+    "SL_Green": {
+      "threshold": "all_ok",
+      "condition": "all OK \u2192 True"
+    }
+  }
+}

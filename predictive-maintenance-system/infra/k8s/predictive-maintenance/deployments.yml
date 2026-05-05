@@ -298,11 +298,11 @@ spec:
                 configMapKeyRef:
                   name: common-config
                   key: INFLUXDB_BUCKET
-            - name: EDGE_BASE_URL
+            - name: KAFKA_BOOTSTRAP_SERVERS
               valueFrom:
                 configMapKeyRef:
                   name: common-config
-                  key: EDGE_BASE_URL
+                  key: KAFKA_BOOTSTRAP_SERVERS
           resources:
             requests:
               cpu: "250m"
@@ -329,6 +329,7 @@ metadata:
   name: monitoring-api
   namespace: predictive-maintenance
 spec:
+  type: LoadBalancer
   selector:
     app: monitoring-api
   ports:

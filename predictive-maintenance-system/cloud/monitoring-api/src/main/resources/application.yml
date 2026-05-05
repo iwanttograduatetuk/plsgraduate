@@ -2,6 +2,12 @@ spring:
   application:
     name: monitoring-api
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka.kafka.svc.cluster.local:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/predictive_maintenance}
     username: ${DB_USER:postgres}
@@ -46,7 +52,7 @@ logging:
   level:
     com.predictive: INFO
 
-edge:
-  # 엣지 에이전트 base URL 맵 (machine-id → URL)
-  # 실제 배포 시 환경변수로 주입
-  base-url: ${EDGE_BASE_URL:http://edge-agent:8000}
+kafka:
+  topics:
+    anomaly-events-critical: anomaly-events-critical
+    anomaly-events-low: anomaly-events-low

@@ -1,0 +1,137 @@
+{
+  "subsystems": [
+    "coolant",
+    "hydraulics",
+    "probe"
+  ],
+  "summary": {
+    "coolant": {
+      "num_experiments": 4,
+      "num_runs": 25,
+      "num_scenarios": 4,
+      "root_cause_variables": [
+        "CLF_Filter_Ok",
+        "CLT_Level_lt_Min",
+        "F_Filter_Ok",
+        "HP_Pump_Ok",
+        "LP_Pump_Ok",
+        "LT_Level_Ok"
+      ],
+      "triggered_alarms": [
+        "CLF_A_700307",
+        "CLT_A_700310",
+        "F_A_700313",
+        "HP_A_700304",
+        "LP_A_700301",
+        "LT_A_700317"
+      ],
+      "timing": {
+        "detection_delay_sec": {
+          "count": 25,
+          "mean": 66.31204,
+          "min": 37.828,
+          "max": 103.013,
+          "median": 64.50899999999999
+        },
+        "diagnosis_delay_sec": {
+          "count": 25,
+          "mean": 79.837,
+          "min": 40.21600000000001,
+          "max": 116.638,
+          "median": 79.714
+        },
+        "resolution_delay_sec": {
+          "count": 25,
+          "mean": 117.55032000000001,
+          "min": 48.791,
+          "max": 183.859,
+          "median": 121.36099999999999
+        },
+        "total_runs": 25
+      }
+    },
+    "hydraulics": {
+      "num_experiments": 9,
+      "num_runs": 41,
+      "num_scenarios": 9,
+      "root_cause_variables": [
+        "Hyd_Filter_Ok",
+        "Hyd_Level_Ok",
+        "Hyd_Pressure",
+        "Hyd_Pump_Ok",
+        "Hyd_Temp_lt_70",
+        "Hyd_Temp_lt_80"
+      ],
+      "triggered_alarms": [
+        "Hyd_A_700202",
+        "Hyd_A_700203",
+        "Hyd_A_700204",
+        "Hyd_A_700205",
+        "Hyd_A_700206",
+        "Hyd_A_700207",
+        "Hyd_A_700208"
+      ],
+      "timing": {
+        "detection_delay_sec": {
+          "count": 41,
+          "mean": 54.028682926829276,
+          "min": 24.945999999999998,
+          "max": 100.05199999999999,
+          "median": 50.86500000000001
+        },
+        "diagnosis_delay_sec": {
+          "count": 41,
+          "mean": 64.27424390243903,
+          "min": 33.822,
+          "max": 100.559,
+          "median": 63.43300000000001
+        },
+        "resolution_delay_sec": {
+          "count": 41,
+          "mean": 74.75212195121951,
+          "min": 43.699,
+          "max": 116.95200000000001,
+          "median": 69.97399999999999
+        },
+        "total_runs": 41
+      }
+    },
+    "probe": {
+      "num_experiments": 6,
+      "num_runs": 34,
+      "num_scenarios": 6,
+      "root_cause_variables": [
+        "MPA_InitPos",
+        "MPA_WorkPos"
+      ],
+      "triggered_alarms": [
+        "MPA_A_701124",
+        "MPA_A_701125"
+      ],
+      "timing": {
+        "detection_delay_sec": {
+          "count": 34,
+          "mean": 22.45329411764706,
+          "min": 11.278999999999996,
+          "max": 40.212,
+          "median": 20.151999999999987
+        },
+        "diagnosis_delay_sec": {
+          "count": 34,
+          "mean": 45.641558823529394,
+          "min": 19.995999999999995,
+          "max": 64.393,
+          "median": 44.387
+        },
+        "resolution_delay_sec": {
+          "count": 34,
+          "mean": 71.27926470588235,
+          "min": 31.717,
+          "max": 99.792,
+          "median": 76.21300000000001
+        },
+        "total_runs": 34
+      }
+    }
+  }
+}

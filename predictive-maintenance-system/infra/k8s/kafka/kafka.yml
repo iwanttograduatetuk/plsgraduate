@@ -28,7 +28,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: zookeeper
-          image: confluentinc/cp-zookeeper:7.7.1
+          image: confluentinc/cp-zookeeper:7.5.0
           ports:
             - containerPort: 2181
           env:
@@ -74,6 +74,7 @@ spec:
       labels:
         app: kafka
     spec:
+      enableServiceLinks: false
       securityContext:
         fsGroup: 1000
       initContainers:
@@ -85,22 +86,23 @@ spec:
               mountPath: /var/lib/kafka/data
       containers:
         - name: kafka
-          image: confluentinc/cp-kafka:7.7.1
+          image: confluentinc/cp-kafka:7.5.0
           ports:
             - containerPort: 9092
+            - containerPort: 9093
           env:
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: KAFKA_BROKER_ID_COMMAND
-              value: "hostname | awk -F'-' '{print $NF}'"
+            - name: KAFKA_BROKER_ID
+              value: "0"
             - name: KAFKA_ZOOKEEPER_CONNECT
               value: "zookeeper.kafka.svc.cluster.local:2181"
             - name: KAFKA_LISTENERS
-              value: "PLAINTEXT://0.0.0.0:9092"
+              value: "INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9093"
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: "PLAINTEXT://$(POD_NAME).kafka.kafka.svc.cluster.local:9092"
+              value: "INTERNAL://kafka-0.kafka.kafka.svc.cluster.local:9092,EXTERNAL://localhost:9093"
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: "INTERNAL"
             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
               value: "1"
             - name: KAFKA_LOG_RETENTION_HOURS
@@ -132,9 +134,57 @@ metadata:
   name: kafka
   namespace: kafka
 spec:
+  clusterIP: None   # headless: StatefulSet pod DNS 활성화 (kafka-0.kafka.kafka.svc.cluster.local)
   selector:
     app: kafka
   ports:
-    - port: 9092
+    - name: internal
+      port: 9092
       targetPort: 9092
-  clusterIP: None
+    - name: external
+      port: 9093
+      targetPort: 9093
+---
+# 외부 포트포워딩용 ClusterIP 서비스 (edge-agent localhost:9093 → GKE)
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-external
+  namespace: kafka
+spec:
+  selector:
+    app: kafka
+  ports:
+    - name: external
+      port: 9093
+      targetPort: 9093
+---
+# Kafka topic init Job
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-topic-init
+  namespace: kafka
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-kafka
+          image: busybox
+          command: ['sh', '-c', 'until nc -z kafka.kafka.svc.cluster.local 9092; do echo "Waiting for Kafka..."; sleep 3; done']
+      containers:
+        - name: create-topics
+          image: confluentinc/cp-kafka:7.5.0
+          command:
+            - sh
+            - -c
+            - |
+              kafka-topics --create --if-not-exists --bootstrap-server kafka.kafka.svc.cluster.local:9092 --topic sensor-telemetry --partitions 3 --replication-factor 1
+              kafka-topics --create --if-not-exists --bootstrap-server kafka.kafka.svc.cluster.local:9092 --topic anomaly-events-critical --partitions 3 --replication-factor 1
+              kafka-topics --create --if-not-exists --bootstrap-server kafka.kafka.svc.cluster.local:9092 --topic anomaly-events-low --partitions 3 --replication-factor 1
+              kafka-topics --create --if-not-exists --bootstrap-server kafka.kafka.svc.cluster.local:9092 --topic fault-diagnosis-results --partitions 3 --replication-factor 1
+              kafka-topics --create --if-not-exists --bootstrap-server kafka.kafka.svc.cluster.local:9092 --topic notification-events --partitions 3 --replication-factor 1
+              echo "Topics created"
+              kafka-topics --list --bootstrap-server kafka.kafka.svc.cluster.local:9092

@@ -56,6 +56,14 @@ data:
           - source_labels: [__meta_kubernetes_pod_label_app]
             regex: fault-diagnosis-service
             action: keep
+
+      - job_name: 'kube-state-metrics'
+        static_configs:
+          - targets: ['kube-state-metrics.monitoring.svc.cluster.local:8080']
+
+      - job_name: 'kafka-exporter'
+        static_configs:
+          - targets: ['kafka-exporter.monitoring.svc.cluster.local:9308']
 ---
 apiVersion: v1
 kind: ServiceAccount

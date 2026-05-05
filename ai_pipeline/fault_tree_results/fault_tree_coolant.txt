@@ -1,0 +1,104 @@
+======================================================================
+FAULT TREE: COOLANT_SYSTEM_FAULT
+Subsystem: coolant
+Total experiments: 4
+Total fault runs: 25
+======================================================================
+
+  Detection delay: mean=66.3s, min=37.8s, max=103.0s
+  Diagnosis delay: mean=79.8s, min=40.2s, max=116.6s
+  Resolution time: mean=117.6s, min=48.8s, max=183.9s
+
+FAULT SCENARIOS:
+--------------------------------------------------
+  [exp_22] The high pressure pump fails and coolant level in tank drops below the minimum threshold.
+    Root causes: HP_Pump_Ok, LT_Level_Ok
+    Alarms:      HP_A_700304, LT_A_700317
+    Diagnosis:   Leakage in coolant system.
+
+  [exp_27] Defective or worn seals cause coolant to leak, so tank level falls below the minimum threshold and triggers a MIN‑level alarm. Continued low flow leads to pump cavitation/overload, causing the high‑pressure pump motor protection to trip and shut the motor off. Operator acknowledges the faults and terminates the experiment.
+    Root causes: CLT_Level_lt_Min, HP_Pump_Ok
+    Alarms:      CLT_A_700310, HP_A_700304
+    Diagnosis:   Leakage in coolant system.
+
+  [exp_28] Due to highly contaminated coolant, the Hydac filter clogs first and then the fleece filter blocks completely. Coolant circulation stops, causing the low‑pressure (ND) protection switch to trip and shut down the pump. Operator acknowledges the fault and terminates the experiment.
+    Root causes: CLF_Filter_Ok, F_Filter_Ok, LP_Pump_Ok
+    Alarms:      CLF_A_700307, F_A_700313, LP_A_700301
+    Diagnosis:   Highly Contaminated Coolant.
+
+  [exp_35] As debris accumulates, the Hydac filter becomes fully blocked, starving the pump inlet. The pump protection triggers, shutting off the pump.
+    Root causes: CLF_Filter_Ok, LP_Pump_Ok
+    Alarms:      CLF_A_700307, LP_A_700301
+    Diagnosis:   Highly Contaminated Coolant.
+
+CAUSAL PROPAGATION CHAINS:
+--------------------------------------------------
+  ROOT: HP_Pump_Ok
+    HP_Pump_Ok -> HP_A_700304
+      [HP_Pump_Monitoring] When HP_Pump_Ok=False -> Alarm 700304 is triggered
+    HP_Pump_Ok -> HP_Pump_isOff
+      [HP_Pump_not_ok_to_off] When HP_Pump_Ok=False, then HP_Pump_isOff=True, i.e. the pump is turned off to prevent damage.
+    HP_A_700304 -> M_ErrorActive
+      [HP_A_700304_to_ErrorActive] High pressure pump motor protection alarm triggers an error state.
+    M_ErrorActive -> M_WarnWithStacklight
+      [ErrorActive_to_WarnWithStacklight] When an error is active, a warning with stacklight is also triggered.
+    M_WarnWithStacklight -> SL_Green
+      [WarnWithStacklight_to_SL_Green] A warning with stacklight can affect the green light state (e.g., blinking).
+    M_WarnWithStacklight -> SL_Red
+      [WarnWithStacklight_to_SL_Red] A warning with stacklight can affect the red light state (e.g., blinking).
+    M_WarnWithStacklight -> SL_Yellow
+      [WarnWithStacklight_to_SL_Yellow] A warning with stacklight can affect the yellow light state (e.g., blinking).
+
+  ROOT: LT_Level_Ok
+    LT_Level_Ok -> LT_A_700317
+      [LT_Level_Monitoring] When LT_Level_Ok=False -> Alarm 700317 is triggered
+    LT_Level_Ok -> LT_Pump_Ok
+      [LT_Level_Pump_Ok] When LT_Level_Ok=False -> LT_Pump_Ok=False, i.e. the pump is turned off to prevent overflow.
+
+  ROOT: CLT_Level_lt_Min
+    CLT_Level_lt_Min -> CLT_A_700310
+      [CLT_Level_Min_Monitoring] When Level_lt_Min=True -> Alarm 700310 is triggered
+    CLT_A_700310 -> M_ErrorActive
+      [CLT_A_700310_to_ErrorActive] Coolant tank level minimum alarm triggers an error state.
+    M_ErrorActive -> M_WarnWithStacklight
+      [ErrorActive_to_WarnWithStacklight] When an error is active, a warning with stacklight is also triggered.
+    M_WarnWithStacklight -> SL_Green
+      [WarnWithStacklight_to_SL_Green] A warning with stacklight can affect the green light state (e.g., blinking).
+    M_WarnWithStacklight -> SL_Red
+      [WarnWithStacklight_to_SL_Red] A warning with stacklight can affect the red light state (e.g., blinking).
+    M_WarnWithStacklight -> SL_Yellow
+      [WarnWithStacklight_to_SL_Yellow] A warning with stacklight can affect the yellow light state (e.g., blinking).
+
+  ROOT: CLF_Filter_Ok
+    CLF_Filter_Ok -> CLF_A_700307
+      [CLF_Filter_Monitoring] When Filter_OK=False for at least 5 seconds -> Alarm 700307 is triggered
+    CLF_A_700307 -> M_WarnWithStacklight
+      [CLF_A_700307_to_WarnWithStacklight] Clogged coolant filter triggers a warning with stacklight.
+    M_WarnWithStacklight -> SL_Green
+      [WarnWithStacklight_to_SL_Green] A warning with stacklight can affect the green light state (e.g., blinking).
+    M_WarnWithStacklight -> SL_Red
+      [WarnWithStacklight_to_SL_Red] A warning with stacklight can affect the red light state (e.g., blinking).
+    M_WarnWithStacklight -> SL_Yellow
+      [WarnWithStacklight_to_SL_Yellow] A warning with stacklight can affect the yellow light state (e.g., blinking).
+
+  ROOT: F_Filter_Ok
+    F_Filter_Ok -> F_A_700313
+      [Fleece_Filter_Monitoring] When Fleece_Filter_Ok=False for at least 5 seconds --> Alarm 700313 is triggered
+
+  ROOT: LP_Pump_Ok
+    LP_Pump_Ok -> LP_A_700301
+      [LP_Pump_Monitoring] When LP_Pump_Ok=False -> Alarm 700301 is triggered
+    LP_Pump_Ok -> LP_Pump_On
+      [LP_Pump_On_Condition] Only if LP_Pump_Ok=True, then LP_Pump_On can be True.
+    LP_A_700301 -> M_ErrorActive
+      [LP_A_700301_to_ErrorActive] Low pressure pump motor protection alarm triggers an error state.
+    LP_Pump_On -> HP_Pump_isOff
+      [LP_Pump_On_HP_Pump_Off] When LP Pump is commanded to be on, then HP Pump is turned off.
+    M_ErrorActive -> M_WarnWithStacklight
+      [ErrorActive_to_WarnWithStacklight] When an error is active, a warning with stacklight is also triggered.
+    M_WarnWithStacklight -> SL_Green
+      [WarnWithStacklight_to_SL_Green] A warning with stacklight can affect the green light state (e.g., blinking).
+    M_WarnWithStacklight -> SL_Red
+      [WarnWithStacklight_to_SL_Red] A warning with stacklight can affect the red light state (e.g., blinking).
+    M_WarnWithStacklight -> SL_Yellow
+      [WarnWithStacklight_to_SL_Yellow] A warning with stacklight can affect the yellow light state (e.g., blinking).

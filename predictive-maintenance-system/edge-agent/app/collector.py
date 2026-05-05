@@ -73,33 +73,32 @@ class CSVReplayCollector:
             return result
 
         # Long 포맷 처리 (time_s, node, value, type)
+        # Colab 학습과 동일한 pivot_table 방식 — 이벤트 타임스탬프만 유지
         if not {"time_s", "node", "value"}.issubset(df.columns):
             raise ValueError(f"지원하지 않는 CSV 포맷: {list(df.columns)}")
 
-        max_time = df["time_s"].max()
-        time_grid = np.arange(0, max_time + 1.0, 1.0)
-        T = len(time_grid)
-        result = np.zeros((T, len(self._feature_names)), dtype=np.float32)
+        # bool 문자열 → float 변환
+        def _b2f(x):
+            s = str(x).strip().lower()
+            if s == "true":
+                return 1.0
+            elif s == "false":
+                return 0.0
+            try:
+                return float(s)
+            except (ValueError, TypeError):
+                return 0.0
 
-        for j, feat_name in enumerate(self._feature_names):
-            events = df[df["node"] == feat_name].copy()
-            if len(events) == 0:
-                continue
-            # bool 문자열 변환
-            events["v"] = events["value"].astype(str).str.strip().str.lower()
-            events["v"] = events["v"].map(
-                lambda x: "1" if x == "true" else ("0" if x == "false" else x)
-            )
-            events["v"] = pd.to_numeric(events["v"], errors="coerce").fillna(0.0)
-            events = events.sort_values("time_s").drop_duplicates("time_s", keep="last")
+        df = df.copy()
+        df["value"] = df["value"].map(_b2f)
 
-            et = events["time_s"].values
-            ev = events["v"].values
-            idx = np.searchsorted(et, time_grid, side="right") - 1
-            valid = idx >= 0
-            result[valid, j] = ev[idx[valid]]
+        # Colab과 동일: pivot_table (이벤트 발생 시점만 행으로 유지)
+        wide = df.pivot_table(
+            index="time_s", columns="node", values="value", aggfunc="last"
+        )
+        wide = wide.reindex(columns=self._feature_names).fillna(0.0)
 
-        return pd.DataFrame(result, columns=self._feature_names)
+        return wide.astype(np.float32)
 
 
 class OPCUACollector:

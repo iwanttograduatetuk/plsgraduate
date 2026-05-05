@@ -1,0 +1,50 @@
+{
+  "model_type": "resnet1d_numpy",
+  "accuracy": 0.7882136279926335,
+  "f1_macro": 0.5643435527529701,
+  "f1_weighted": 0.7617669263074084,
+  "confusion_matrix": [
+    [
+      330,
+      4,
+      5,
+      4
+    ],
+    [
+      18,
+      5,
+      13,
+      14
+    ],
+    [
+      13,
+      3,
+      64,
+      2
+    ],
+    [
+      13,
+      5,
+      21,
+      29
+    ]
+  ],
+  "train_size": 2173,
+  "test_size": 543,
+  "n_features": 59,
+  "hidden_size": 32,
+  "n_blocks": 2,
+  "epochs": 50,
+  "class_distribution": {
+    "normal": 1716,
+    "coolant_fault": 250,
+    "hydraulics_fault": 410,
+    "probe_fault": 340
+  },
+  "comparison": {
+    "xgboost_accuracy": 1.0,
+    "xgboost_f1_macro": 1.0,
+    "resnet_accuracy": 0.7882136279926335,
+    "resnet_f1_macro": 0.5643435527529701
+  }
+}

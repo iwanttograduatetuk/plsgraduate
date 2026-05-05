@@ -1,5 +1,7 @@
-{
-  "annotations": { "list": [] },
+﻿{
+  "annotations": {
+    "list": []
+  },
   "description": "CNC 예지보전 — 운영자용 실시간 모니터링 및 기계 제어",
   "editable": true,
   "graphTooltip": 1,
@@ -8,95 +10,326 @@
     {
       "type": "stat",
       "title": "미처리 이상",
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
-      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] }
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
-      "targets": [{ "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE is_resolved=false", "format": "table", "refId": "A" }]
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE is_resolved=false",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
     },
     {
       "type": "stat",
       "title": "CRITICAL 건수",
-      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
       "id": 2,
-      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
-      "targets": [{ "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE severity='CRITICAL' AND is_resolved=false", "format": "table", "refId": "A" }]
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE severity='CRITICAL' AND is_resolved=false",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
     },
     {
       "type": "stat",
       "title": "최근 1분 이상 건수",
-      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
       "id": 3,
-      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 20 }] }
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
-      "targets": [{ "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE detected_at >= NOW() - INTERVAL '1 minute'", "format": "table", "refId": "A" }]
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE detected_at >= NOW() - INTERVAL '1 minute'",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
     },
     {
       "type": "stat",
       "title": "처리 완료 건수",
-      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
       "id": 4,
-      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
-      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } } },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
-      "targets": [{ "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE is_resolved=true", "format": "table", "refId": "A" }]
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS value FROM anomaly_events WHERE is_resolved=true",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
     },
     {
       "type": "table",
       "title": "실시간 이상 이벤트",
-      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 4 },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
       "id": 5,
-      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "datasource": {
+        "type": "postgres",
+        "uid": "PostgreSQL"
+      },
       "fieldConfig": {
         "overrides": [
-          { "matcher": { "id": "byName", "options": "심각도" }, "properties": [{ "id": "custom.width", "value": 100 }, { "id": "color", "value": { "mode": "thresholds" } }, { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0 }] } }] },
-          { "matcher": { "id": "byName", "options": "처리완료" }, "properties": [{ "id": "custom.width", "value": 90 }] }
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "심각도"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "처리완료"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          }
         ]
       },
-      "options": { "showHeader": true, "sortBy": [{ "displayName": "감지시각", "desc": true }], "footer": { "show": false } },
-      "targets": [{ "rawSql": "SELECT detected_at AS \"감지시각\", site_id AS \"지점\", machine_id AS \"기계\", subsystem AS \"서브시스템\", ROUND(anomaly_score::numeric, 3) AS \"이상점수\", severity AS \"심각도\", is_resolved AS \"처리완료\" FROM anomaly_events ORDER BY detected_at DESC LIMIT 100", "format": "table", "refId": "A" }]
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "감지시각",
+            "desc": true
+          }
+        ],
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT detected_at AS \"감지시각\", site_id AS \"지점\", machine_id AS \"기계\", subsystem AS \"서브시스템\", ROUND(anomaly_score::numeric, 3) AS \"이상점수\", severity AS \"심각도\", is_resolved AS \"처리완료\" FROM anomaly_events ORDER BY detected_at DESC LIMIT 100",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
     },
     {
       "type": "row",
       "title": "CNC 기계 제어",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
       "id": 6,
       "collapsed": false
     },
     {
       "type": "text",
       "title": "CNC 기계 제어 패널",
-      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 17 },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
       "id": 7,
       "options": {
         "mode": "html",
-        "content": "<iframe src=\"http://34.64.49.175:8082/control.html\" width=\"100%\" height=\"100%\" frameborder=\"0\" style=\"min-height:480px; border-radius:4px;\"></iframe>"
+        "content": "<div style=\"display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;font-family:sans-serif;\"><div style=\"font-size:14px;color:#aaa;margin-bottom:4px;\">기계 ID: <strong style=\"color:#fff\">cnc-001</strong></div><div style=\"display:flex;gap:16px;\"><button onclick=\"sendCmd(this,'STOP')\" style=\"padding:14px 32px;font-size:16px;font-weight:bold;border:none;border-radius:6px;background:#e53e3e;color:#fff;cursor:pointer;\">⏹ STOP</button><button onclick=\"sendCmd(this,'RESUME')\" style=\"padding:14px 32px;font-size:16px;font-weight:bold;border:none;border-radius:6px;background:#38a169;color:#fff;cursor:pointer;\">▶ RESUME</button></div><div id=\"r\" style=\"margin-top:8px;font-size:13px;color:#68d391;min-height:20px;\"></div></div><script>function sendCmd(btn,cmd){var r=document.getElementById(\"r\");btn.disabled=true;r.textContent=cmd+\" 전송 중...\";var b=new URLSearchParams();b.append(\"command\",cmd);b.append(\"reason\",\"Grafana\");fetch(\"http:///api/machines/cnc-001/command\",{method:\"POST\",mode:\"no-cors\",body:b}).then(function(){r.textContent=\"✅ \"+cmd+\" 전송 완료\";btn.disabled=false;}).catch(function(e){r.textContent=\"❌ \"+e;btn.disabled=false;});}</script>"
       }
     }
   ],
   "refresh": "5s",
   "schemaVersion": 39,
-  "tags": ["CNC", "예지보전", "operations"],
-  "time": { "from": "now-30m", "to": "now" },
+  "tags": [
+    "CNC",
+    "예지보전",
+    "operations"
+  ],
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
   "timezone": "browser",
   "title": "2. Operations — 실시간 운영",
   "uid": "cnc-operations",
