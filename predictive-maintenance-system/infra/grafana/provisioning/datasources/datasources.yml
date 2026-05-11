@@ -11,16 +11,16 @@ datasources:
       defaultBucket: sensor-scores
       tlsSkipVerify: true
     secureJsonData:
-      token: my-token
+      token: my-token-change-in-production
     isDefault: true
     editable: true
 
   - name: PostgreSQL
     type: postgres
-    url: postgres:5432
-    user: postgres
+    url: postgres.predictive-maintenance.svc.cluster.local:5432
+    user: cnc_user
     secureJsonData:
-      password: postgres
+      password: cnc_password
     jsonData:
       database: predictive_maintenance
       sslmode: disable

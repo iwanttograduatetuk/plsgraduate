@@ -1,9 +1,10 @@
 """
 CNC 센서 데이터 수집 모듈
 ──────────────────────────────────────────────────────────────
-두 가지 모드 지원:
-  1. replay_mode=True  → real_op CSV 파일을 재생 (개발/테스트용)
-  2. replay_mode=False → OPC-UA / MQTT 실시간 수집 (프로덕션)
+세 가지 모드 지원:
+  1. demo_mode=True    → 정상/폴트 플레이리스트 교차 재생 (발표/시연용)
+  2. replay_mode=True  → real_op CSV 순환 재생 (개발/테스트용)
+  3. replay_mode=False → OPC-UA / MQTT 실시간 수집 (프로덕션)
 """
 
 from __future__ import annotations
@@ -135,7 +136,28 @@ def create_collector(
     speed_factor: float = 10.0,
     opc_url: str = "",
     node_ids: dict | None = None,
+    # 데모 모드 파라미터
+    demo_mode: bool = False,
+    dig_twin_dir: Path | None = None,
+    demo_first_normal_sec: int = 10,
+    demo_inter_normal_sec: int = 5,
+    demo_fault_sec: int = 10,
 ):
+    if demo_mode:
+        from .demo_collector import DemoPlaylistCollector
+        if dig_twin_dir is None:
+            raise ValueError("demo_mode=True 이면 dig_twin_dir 이 필요합니다.")
+        return DemoPlaylistCollector(
+            real_op_dir=replay_csv_dir,
+            dig_twin_dir=dig_twin_dir,
+            feature_names=feature_names,
+            col_min=col_min,
+            col_range=col_range,
+            first_normal_sec=demo_first_normal_sec,
+            inter_normal_sec=demo_inter_normal_sec,
+            fault_sec=demo_fault_sec,
+            speed_factor=speed_factor,
+        )
     if replay_mode:
         return CSVReplayCollector(
             csv_dir=replay_csv_dir,

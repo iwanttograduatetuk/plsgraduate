@@ -88,6 +88,17 @@ class DataConfig(BaseSettings):
     )
     replay_speed_factor: float = Field(default=10.0, description="재생 속도 배율 (10=10배속)")
 
+    # 데모 플레이리스트 모드 (발표/시연용) — demo_mode=True 이면 replay_mode 무시
+    demo_mode: bool = Field(default=False, description="True=정상/폴트 플레이리스트 재생")
+    demo_first_normal_sec: int = Field(default=10, description="첫 정상 구간 길이(초)")
+    demo_inter_normal_sec: int = Field(default=5,  description="폴트 사이 정상 구간 길이(초)")
+    demo_fault_sec: int        = Field(default=10, description="각 폴트 구간 길이(초)")
+    dig_twin_dir: Path = Field(
+        default=Path(__file__).resolve().parent.parent.parent.parent
+        / "dataset_causRCA" / "dig_twin",
+        description="demo_mode 에서 사용할 dig_twin 루트 (exp_coolant / exp_hydraulics / exp_probe)",
+    )
+
 
 class AgentConfig(BaseSettings):
     """Edge Agent 전체 설정"""

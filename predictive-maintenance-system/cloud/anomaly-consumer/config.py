@@ -8,8 +8,9 @@ class Settings(BaseSettings):
 
     # Kafka (Consumer)
     kafka_bootstrap_servers: str = Field(default="localhost:9092")
-    kafka_topic_anomaly_events: str = Field(default="anomaly-events")
-    kafka_topic_fault_requests: str = Field(default="fault-diagnosis-requests")
+    kafka_topic_anomaly_critical: str = Field(default="anomaly-events-critical")
+    kafka_topic_anomaly_low:      str = Field(default="anomaly-events-low")
+    kafka_topic_fault_requests:   str = Field(default="fault-diagnosis-requests")
     kafka_topic_notification:   str = Field(default="notification-events")
     kafka_topic_fault_results:  str = Field(default="fault-diagnosis-results")
     kafka_group_id: str = Field(default="anomaly-consumer-group")

@@ -146,7 +146,7 @@ async def lifespan(app: FastAPI):
         compression_type=settings.kafka.compression_type,
     )
 
-    # 4. 컬렉터 생성
+    # 4. 컬렉터 생성 (demo_mode > replay_mode > OPC-UA 순 우선순위)
     collector = create_collector(
         replay_mode=settings.data.replay_mode,
         replay_csv_dir=settings.data.replay_csv_dir,
@@ -154,6 +154,11 @@ async def lifespan(app: FastAPI):
         col_min=col_min,
         col_range=col_range,
         speed_factor=settings.data.replay_speed_factor,
+        demo_mode=settings.data.demo_mode,
+        dig_twin_dir=settings.data.dig_twin_dir,
+        demo_first_normal_sec=settings.data.demo_first_normal_sec,
+        demo_inter_normal_sec=settings.data.demo_inter_normal_sec,
+        demo_fault_sec=settings.data.demo_fault_sec,
     )
 
     # 5. 백그라운드 루프 시작

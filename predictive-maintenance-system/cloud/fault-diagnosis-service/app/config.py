@@ -9,8 +9,7 @@ class Settings(BaseSettings):
 
     # Kafka
     kafka_bootstrap_servers: str = Field(default="localhost:9092")
-    kafka_topic_critical: str  = Field(default="anomaly-events-critical")
-    kafka_topic_low: str       = Field(default="anomaly-events-low")
+    kafka_topic_requests: str  = Field(default="fault-diagnosis-requests")  # anomaly-consumer가 DB 저장 후 발행
     kafka_topic_results: str   = Field(default="fault-diagnosis-results")
     kafka_group_id: str        = Field(default="fault-diagnosis-group")
 

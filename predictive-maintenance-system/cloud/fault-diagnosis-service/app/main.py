@@ -223,10 +223,12 @@ def _diagnose(request: dict) -> dict:
 # ── Kafka 소비 루프 ───────────────────────────────────────────────────────────
 
 async def _kafka_loop() -> None:
-    """anomaly-events-critical/low 토픽을 소비하여 SHAP RCA 수행"""
+    """fault-diagnosis-requests 토픽을 소비하여 SHAP RCA 수행
+    (anomaly-consumer가 anomaly_events DB 저장 완료 후 발행하는 토픽)
+    """
     global _running
 
-    topics = [settings.kafka_topic_critical, settings.kafka_topic_low]
+    topics = [settings.kafka_topic_requests]
 
     try:
         consumer = KafkaConsumer(

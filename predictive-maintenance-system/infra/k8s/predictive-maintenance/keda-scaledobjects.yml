@@ -57,8 +57,15 @@ spec:
       metadata:
         bootstrapServers: kafka.kafka.svc.cluster.local:9092
         consumerGroup: anomaly-consumer-group
-        topic: anomaly-events
-        lagThreshold: "100"   # 이상 이벤트는 빠르게 처리 (임계 낮게)
+        topic: anomaly-events-critical
+        lagThreshold: "100"
+        offsetResetPolicy: latest
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka.kafka.svc.cluster.local:9092
+        consumerGroup: anomaly-consumer-group
+        topic: anomaly-events-low
+        lagThreshold: "100"
         offsetResetPolicy: latest
 
 # ── fault-diagnosis-service ───────────────────────────────────────────────────

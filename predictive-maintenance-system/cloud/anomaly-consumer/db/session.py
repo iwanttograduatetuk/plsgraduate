@@ -9,8 +9,10 @@ from config import settings
 engine = create_async_engine(
     settings.database_url,
     echo=False,
-    pool_size=10,
-    max_overflow=20,
+    pool_size=3,       # replica 2개 × 3 = 6 커넥션
+    max_overflow=2,    # 버스트 시 replica당 +2 = 최대 10
+    pool_timeout=30,
+    pool_recycle=1800,
 )
 
 AsyncSessionLocal = async_sessionmaker(

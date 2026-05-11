@@ -77,10 +77,32 @@ async def _save_anomaly_event(msg: dict) -> AnomalyEvent:
 
 
 async def _save_diagnosis_result(msg: dict) -> None:
-    """fault-diagnosis-results 메시지 → fault_diagnosis_results 테이블 저장"""
+    """fault-diagnosis-results 메시지 → fault_diagnosis_results 테이블 저장
+
+    FK 위반(부모 anomaly_event 없음) 시 stale 메시지로 판단하고 skip.
+    이전 배포 버전이 anomaly-events-* 를 직접 구독해 쌓아둔 backlog
+    메시지가 이 경로로 들어올 수 있음.
+    """
+    event_id_str = msg.get("anomaly_event_id", "")
+    if not event_id_str:
+        logger.warning("진단 결과 event_id 없음 — skip: %s", msg)
+        return
+
+    from sqlalchemy import select
+    from db.models import AnomalyEvent as AE
+
     async with AsyncSessionLocal() as session:
+        # 부모 event 존재 확인 후 INSERT (FK 위반 방지)
+        parent = await session.get(AE, UUID(event_id_str))
+        if parent is None:
+            logger.warning(
+                "진단 결과 skip (부모 anomaly_event 없음 — stale backlog): event_id=%s",
+                event_id_str,
+            )
+            return
+
         result = FaultDiagnosisResult(
-            event_id=UUID(msg["anomaly_event_id"]),
+            event_id=UUID(event_id_str),
             model_name=msg.get("model", "unknown"),
             diagnosed_at=_parse_ts(msg.get("diagnosis_timestamp", "")),
             root_causes=msg.get("root_causes", []),
@@ -88,7 +110,7 @@ async def _save_diagnosis_result(msg: dict) -> None:
         )
         session.add(result)
         await session.commit()
-    logger.info("진단 결과 저장: event_id=%s model=%s", msg.get("anomaly_event_id"), msg.get("model"))
+    logger.info("진단 결과 저장: event_id=%s model=%s", event_id_str, msg.get("model"))
 
 
 # ── Kafka 발행 ────────────────────────────────────────────────────────────────
@@ -102,13 +124,14 @@ def _publish(producer: KafkaProducer, topic: str, key: str, payload: dict) -> No
 
 def _build_fault_request(event: AnomalyEvent, original_msg: dict) -> dict:
     return {
-        "anomaly_event_id": str(event.event_id),
-        "site_id":          event.site_id,
-        "machine_id":       event.machine_id,
-        "subsystem":        event.subsystem,
-        "detected_at":      event.detected_at.isoformat(),
-        "feature_snapshot": event.feature_snapshot,
-        "severity":         event.severity,
+        "event_id":     str(event.event_id),          # fault-diagnosis-service가 event_id로 읽음
+        "site_id":      event.site_id,
+        "machine_id":   event.machine_id,
+        "subsystem":    event.subsystem,
+        "detected_at":  event.detected_at.isoformat(),
+        "feature_values": event.feature_snapshot,     # _diagnose 가 feature_values로 읽음
+        "severity":     event.severity,
+        "priority":     original_msg.get("priority", "low"),
     }
 
 
@@ -166,9 +189,10 @@ async def main_async():
         retries=3,
     )
 
-    # Consumer 1: anomaly-events
+    # Consumer 1: anomaly-events-critical + anomaly-events-low (두 토픽 모두 구독)
     anomaly_consumer = KafkaConsumer(
-        settings.kafka_topic_anomaly_events,
+        settings.kafka_topic_anomaly_critical,
+        settings.kafka_topic_anomaly_low,
         bootstrap_servers=settings.kafka_bootstrap_servers.split(","),
         group_id=settings.kafka_group_id,
         auto_offset_reset="earliest",

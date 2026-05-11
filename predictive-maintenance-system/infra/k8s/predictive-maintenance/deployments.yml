@@ -24,7 +24,7 @@ spec:
       containers:
         - name: telemetry-consumer
           image: asia-northeast3-docker.pkg.dev/cnc-predictive/cnc-registry/telemetry-consumer:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: common-config
@@ -65,7 +65,7 @@ spec:
       containers:
         - name: anomaly-consumer
           image: asia-northeast3-docker.pkg.dev/cnc-predictive/cnc-registry/anomaly-consumer:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: common-config
@@ -106,7 +106,7 @@ spec:
       containers:
         - name: fault-diagnosis-service
           image: asia-northeast3-docker.pkg.dev/cnc-predictive/cnc-registry/fault-diagnosis-service:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8001
           envFrom:
@@ -167,7 +167,7 @@ spec:
       containers:
         - name: notification-service
           image: asia-northeast3-docker.pkg.dev/cnc-predictive/cnc-registry/notification-service:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
@@ -259,7 +259,7 @@ spec:
       containers:
         - name: monitoring-api
           image: asia-northeast3-docker.pkg.dev/cnc-predictive/cnc-registry/monitoring-api:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8082
           env:
@@ -399,6 +399,11 @@ spec:
                 secretKeyRef:
                   name: db-secret
                   key: postgres-password
+            - name: POSTGRES_MAX_CONNECTIONS
+              value: "200"
+            - name: PGARGS
+              value: "-c max_connections=200"
+          args: ["-c", "max_connections=200"]
           resources:
             requests:
               cpu: "250m"
