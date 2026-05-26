@@ -1,0 +1,1 @@
+kubectl patch scaledobject anomaly-consumer-scaledobject -n predictive-maintenance --type=merge -p '{\"spec\":{\"minReplicaCount\":2,\"maxReplicaCount\":8}}'

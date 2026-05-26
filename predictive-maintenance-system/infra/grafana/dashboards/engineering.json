@@ -290,7 +290,7 @@
       },
       "targets": [
         {
-          "rawSql": "SELECT fdr.diagnosed_at AS \"진단시각\", ae.site_id AS \"지점\", ae.machine_id AS \"기계\", ae.subsystem AS \"서브시스템\", fdr.model_name AS \"모델\", ROUND(fdr.confidence::numeric, 3) AS \"신뢰도\", fdr.root_causes->0->>'variable' AS \"원인1위\" FROM fault_diagnosis_results fdr JOIN anomaly_events ae ON fdr.event_id = ae.event_id ORDER BY fdr.diagnosed_at DESC LIMIT 50",
+          "rawSql": "SELECT fdr.diagnosed_at AS \"진단시각\", ae.site_id AS \"지점\", ae.machine_id AS \"기계\", ae.subsystem AS \"서브시스템\", fdr.model_name AS \"모델\", ROUND(fdr.confidence::numeric, 3) AS \"신뢰도\", fdr.root_causes->0->>'root_cause' AS \"원인1위\" FROM fault_diagnosis_results fdr JOIN anomaly_events ae ON fdr.event_id = ae.event_id ORDER BY fdr.diagnosed_at DESC LIMIT 50",
           "format": "table",
           "refId": "A"
         }

@@ -2,7 +2,7 @@
   "annotations": {
     "list": []
   },
-  "description": "CNC 예지보전 — 운영자용 실시간 모니터링 및 기계 제어",
+  "description": "CNC 예지보전 — 운영자용 실시간 모니터링",
   "editable": true,
   "graphTooltip": 1,
   "id": null,
@@ -290,33 +290,6 @@
           "refId": "A"
         }
       ]
-    },
-    {
-      "type": "row",
-      "title": "CNC 기계 제어",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 16
-      },
-      "id": 6,
-      "collapsed": false
-    },
-    {
-      "type": "text",
-      "title": "CNC 기계 제어 패널",
-      "gridPos": {
-        "h": 14,
-        "w": 24,
-        "x": 0,
-        "y": 17
-      },
-      "id": 7,
-      "options": {
-        "mode": "html",
-        "content": "<div style=\"display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;font-family:sans-serif;\"><div style=\"font-size:14px;color:#aaa;margin-bottom:4px;\">기계 ID: <strong style=\"color:#fff\">cnc-001</strong></div><div style=\"display:flex;gap:16px;\"><button onclick=\"sendCmd(this,'STOP')\" style=\"padding:14px 32px;font-size:16px;font-weight:bold;border:none;border-radius:6px;background:#e53e3e;color:#fff;cursor:pointer;\">⏹ STOP</button><button onclick=\"sendCmd(this,'RESUME')\" style=\"padding:14px 32px;font-size:16px;font-weight:bold;border:none;border-radius:6px;background:#38a169;color:#fff;cursor:pointer;\">▶ RESUME</button></div><div id=\"r\" style=\"margin-top:8px;font-size:13px;color:#68d391;min-height:20px;\"></div></div><script>function sendCmd(btn,cmd){var r=document.getElementById(\"r\");btn.disabled=true;r.textContent=cmd+\" 전송 중...\";var b=new URLSearchParams();b.append(\"command\",cmd);b.append(\"reason\",\"Grafana\");fetch(\"http:///api/machines/cnc-001/command\",{method:\"POST\",mode:\"no-cors\",body:b}).then(function(){r.textContent=\"✅ \"+cmd+\" 전송 완료\";btn.disabled=false;}).catch(function(e){r.textContent=\"❌ \"+e;btn.disabled=false;});}</script>"
-      }
     }
   ],
   "refresh": "5s",

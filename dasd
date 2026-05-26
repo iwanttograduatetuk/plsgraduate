@@ -1,0 +1,146 @@
+warning: in the working copy of 'predictive-maintenance-system/cloud/fault-diagnosis-service/requirements.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'predictive-maintenance-system/infra/grafana/dashboards/engineering.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'predictive-maintenance-system/infra/grafana/dashboards/infra.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'predictive-maintenance-system/infra/grafana/dashboards/operations.json', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/predictive-maintenance-system/cloud/anomaly-consumer/main.py b/predictive-maintenance-system/cloud/anomaly-consumer/main.py[m
+[1mindex f50e7cf..47b2515 100755[m
+[1m--- a/predictive-maintenance-system/cloud/anomaly-consumer/main.py[m
+[1m+++ b/predictive-maintenance-system/cloud/anomaly-consumer/main.py[m
+[36m@@ -198,6 +198,9 @@[m [masync def main_async():[m
+         auto_offset_reset="earliest",[m
+         enable_auto_commit=True,[m
+         value_deserializer=lambda b: json.loads(b.decode("utf-8")),[m
+[32m+[m[32m        max_poll_interval_ms=600000,[m
+[32m+[m[32m        session_timeout_ms=60000,[m
+[32m+[m[32m        heartbeat_interval_ms=20000,[m
+     )[m
+ [m
+     # Consumer 2: fault-diagnosis-results[m
+[36m@@ -208,27 +211,40 @@[m [masync def main_async():[m
+         auto_offset_reset="earliest",[m
+         enable_auto_commit=True,[m
+         value_deserializer=lambda b: json.loads(b.decode("utf-8")),[m
+[32m+[m[32m        max_poll_interval_ms=600000,[m
+[32m+[m[32m        session_timeout_ms=60000,[m
+[32m+[m[32m        heartbeat_interval_ms=20000,[m
+     )[m
+ [m
+[32m+[m[32m    async def _result_loop():[m
+[32m+[m[32m        loop = asyncio.get_event_loop()[m
+[32m+[m[32m        while _running:[m
+[32m+[m[32m            r_records = await loop.run_in_executor([m
+[32m+[m[32m                None, lambda: result_consumer.poll(timeout_ms=200)[m
+[32m+[m[32m            )[m
+[32m+[m[32m            for _, msgs in r_records.items():[m
+[32m+[m[32m                for m in msgs:[m
+[32m+[m[32m                    await _process_fault_result(m.value)[m
+[32m+[m[32m            await asyncio.sleep(0.01)[m
+[32m+[m
+     logger.info("메시지 소비 시작...")[m
+[32m+[m[32m    result_task = asyncio.create_task(_result_loop())[m
+     try:[m
+[32m+[m[32m        loop = asyncio.get_event_loop()[m
+         while _running:[m
+             # anomaly-events 배치 처리[m
+[31m-            a_records = anomaly_consumer.poll(timeout_ms=500)[m
+[32m+[m[32m            a_records = await loop.run_in_executor([m
+[32m+[m[32m                None, lambda: anomaly_consumer.poll(timeout_ms=200)[m
+[32m+[m[32m            )[m
+             for _, msgs in a_records.items():[m
+                 for m in msgs:[m
+                     await _process_anomaly_event(m.value, producer)[m
+ [m
+[31m-            # fault-diagnosis-results 배치 처리[m
+[31m-            r_records = result_consumer.poll(timeout_ms=500)[m
+[31m-            for _, msgs in r_records.items():[m
+[31m-                for m in msgs:[m
+[31m-                    await _process_fault_result(m.value)[m
+[31m-[m
+             producer.flush()[m
+[31m-            await asyncio.sleep(0.01)[m
+[32m+[m[32m            await asyncio.sleep(0)[m
+ [m
+     finally:[m
+[32m+[m[32m        result_task.cancel()[m
+         anomaly_consumer.close()[m
+         result_consumer.close()[m
+         producer.close()[m
+[1mdiff --git a/predictive-maintenance-system/cloud/fault-diagnosis-service/requirements.txt b/predictive-maintenance-system/cloud/fault-diagnosis-service/requirements.txt[m
+[1mindex 2adef71..ab0bc81 100755[m
+[1m--- a/predictive-maintenance-system/cloud/fault-diagnosis-service/requirements.txt[m
+[1m+++ b/predictive-maintenance-system/cloud/fault-diagnosis-service/requirements.txt[m
+[36m@@ -4,7 +4,7 @@[m [mkafka-python-ng==2.2.3[m
+ xgboost==2.1.3[m
+ shap==0.46.0[m
+ numpy==2.1.3[m
+[31m-scikit-learn==1.6.0[m
+[32m+[m[32mscikit-learn==1.5.2[m
+ networkx==3.4.2[m
+ pandas==2.2.3[m
+ pydantic-settings==2.7.0[m
+[1mdiff --git a/predictive-maintenance-system/infra/grafana/dashboards/engineering.json b/predictive-maintenance-system/infra/grafana/dashboards/engineering.json[m
+[1mindex 458540e..cddc68b 100644[m
+[1m--- a/predictive-maintenance-system/infra/grafana/dashboards/engineering.json[m
+[1m+++ b/predictive-maintenance-system/infra/grafana/dashboards/engineering.json[m
+[36m@@ -290,7 +290,7 @@[m
+       },[m
+       "targets": [[m
+         {[m
+[31m-          "rawSql": "SELECT fdr.diagnosed_at AS \"진단시각\", ae.site_id AS \"지점\", ae.machine_id AS \"기계\", ae.subsystem AS \"서브시스템\", fdr.model_name AS \"모델\", ROUND(fdr.confidence::numeric, 3) AS \"신뢰도\", fdr.root_causes->0->>'variable' AS \"원인1위\" FROM fault_diagnosis_results fdr JOIN anomaly_events ae ON fdr.event_id = ae.event_id ORDER BY fdr.diagnosed_at DESC LIMIT 50",[m
+[32m+[m[32m          "rawSql": "SELECT fdr.diagnosed_at AS \"진단시각\", ae.site_id AS \"지점\", ae.machine_id AS \"기계\", ae.subsystem AS \"서브시스템\", fdr.model_name AS \"모델\", ROUND(fdr.confidence::numeric, 3) AS \"신뢰도\", fdr.root_causes->0->>'root_cause' AS \"원인1위\" FROM fault_diagnosis_results fdr JOIN anomaly_events ae ON fdr.event_id = ae.event_id ORDER BY fdr.diagnosed_at DESC LIMIT 50",[m
+           "format": "table",[m
+           "refId": "A"[m
+         }[m
+[1mdiff --git a/predictive-maintenance-system/infra/grafana/dashboards/infra.json b/predictive-maintenance-system/infra/grafana/dashboards/infra.json[m
+[1mindex e1de5ad..1c19bc0 100644[m
+[1m--- a/predictive-maintenance-system/infra/grafana/dashboards/infra.json[m
+[1m+++ b/predictive-maintenance-system/infra/grafana/dashboards/infra.json[m
+[36m@@ -56,7 +56,7 @@[m
+       },[m
+       "targets": [[m
+         {[m
+[31m-          "expr": "count(up == 1)",[m
+[32m+[m[32m          "expr": "count(kube_deployment_status_replicas_ready{deployment=~\"anomaly-consumer|telemetry-consumer|fault-diagnosis-service|notification-service|monitoring-api|kafka-exporter|kube-state-metrics\"} > 0)",[m
+           "legendFormat": "UP",[m
+           "refId": "A"[m
+         }[m
+[36m@@ -470,7 +470,7 @@[m
+       },[m
+       "targets": [[m
+         {[m
+[31m-          "expr": "sum(kafka_consumergroup_lag) by (consumergroup)",[m
+[32m+[m[32m          "expr": "sum(kafka_consumergroup_lag{consumergroup!~\"anomaly-consumer-group-results|notification-diagnosis-group\"}) by (consumergroup)",[m
+           "legendFormat": "{{consumergroup}}",[m
+           "refId": "A"[m
+         }[m
+[36m@@ -664,8 +664,8 @@[m
+       },[m
+       "targets": [[m
+         {[m
+[31m-          "expr": "up",[m
+[31m-          "legendFormat": "{{job}}",[m
+[32m+[m[32m          "expr": "kube_deployment_status_replicas_ready{deployment=~\"anomaly-consumer|telemetry-consumer|fault-diagnosis-service|notification-service|monitoring-api|kafka-exporter|kube-state-metrics\"} > 0",[m
+[32m+[m[32m          "legendFormat": "{{deployment}}",[m
+           "refId": "A"[m
+         }[m
+       ][m
+[36m@@ -742,8 +742,8 @@[m
+           "refId": "A"[m
+         },[m
+         {[m
+[31m-          "expr": "kube_deployment_status_replicas_ready{deployment=\"telemetry-consumer\"}",[m
+[31m-          "legendFormat": "telemetry-consumer 파드 수",[m
+[32m+[m[32m          "expr": "kube_deployment_status_replicas_ready{deployment=\"fault-diagnosis-service\"}",[m
+[32m+[m[32m          "legendFormat": "fault-diagnosis-service 파드 수",[m
+           "refId": "B"[m
+         }[m
+       ][m
+[36m@@ -776,8 +776,20 @@[m
+         "overrides": [[m
+           {[m
+             "matcher": {[m
+[31m-              "id": "byName",[m
+[31m-              "options": "파드 수"[m
+[32m+[m[32m              "id": "byFrameRefID",[m
+[32m+[m[32m              "options": "B"[m
+[32m+[m[32m         

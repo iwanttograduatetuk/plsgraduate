@@ -198,6 +198,9 @@ async def main_async():
         auto_offset_reset="earliest",
         enable_auto_commit=True,
         value_deserializer=lambda b: json.loads(b.decode("utf-8")),
+        max_poll_interval_ms=600000,
+        session_timeout_ms=60000,
+        heartbeat_interval_ms=20000,
     )
 
     # Consumer 2: fault-diagnosis-results
@@ -208,27 +211,40 @@ async def main_async():
         auto_offset_reset="earliest",
         enable_auto_commit=True,
         value_deserializer=lambda b: json.loads(b.decode("utf-8")),
+        max_poll_interval_ms=600000,
+        session_timeout_ms=60000,
+        heartbeat_interval_ms=20000,
     )
 
+    async def _result_loop():
+        loop = asyncio.get_event_loop()
+        while _running:
+            r_records = await loop.run_in_executor(
+                None, lambda: result_consumer.poll(timeout_ms=200)
+            )
+            for _, msgs in r_records.items():
+                for m in msgs:
+                    await _process_fault_result(m.value)
+            await asyncio.sleep(0.01)
+
     logger.info("메시지 소비 시작...")
+    result_task = asyncio.create_task(_result_loop())
     try:
+        loop = asyncio.get_event_loop()
         while _running:
             # anomaly-events 배치 처리
-            a_records = anomaly_consumer.poll(timeout_ms=500)
+            a_records = await loop.run_in_executor(
+                None, lambda: anomaly_consumer.poll(timeout_ms=200)
+            )
             for _, msgs in a_records.items():
                 for m in msgs:
                     await _process_anomaly_event(m.value, producer)
 
-            # fault-diagnosis-results 배치 처리
-            r_records = result_consumer.poll(timeout_ms=500)
-            for _, msgs in r_records.items():
-                for m in msgs:
-                    await _process_fault_result(m.value)
-
             producer.flush()
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0)
 
     finally:
+        result_task.cancel()
         anomaly_consumer.close()
         result_consumer.close()
         producer.close()

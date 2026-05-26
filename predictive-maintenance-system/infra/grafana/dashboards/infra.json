@@ -56,7 +56,7 @@
       },
       "targets": [
         {
-          "expr": "count(up == 1)",
+          "expr": "count(kube_deployment_status_replicas_ready{deployment=~\"anomaly-consumer|telemetry-consumer|fault-diagnosis-service|notification-service|monitoring-api|kafka-exporter|kube-state-metrics\"} > 0)",
           "legendFormat": "UP",
           "refId": "A"
         }
@@ -470,7 +470,7 @@
       },
       "targets": [
         {
-          "expr": "sum(kafka_consumergroup_lag) by (consumergroup)",
+          "expr": "sum(kafka_consumergroup_lag{consumergroup!~\"anomaly-consumer-group-results|notification-diagnosis-group\"}) by (consumergroup)",
           "legendFormat": "{{consumergroup}}",
           "refId": "A"
         }
@@ -664,8 +664,8 @@
       },
       "targets": [
         {
-          "expr": "up",
-          "legendFormat": "{{job}}",
+          "expr": "kube_deployment_status_replicas_ready{deployment=~\"anomaly-consumer|telemetry-consumer|fault-diagnosis-service|notification-service|monitoring-api|kafka-exporter|kube-state-metrics\"} > 0",
+          "legendFormat": "{{deployment}}",
           "refId": "A"
         }
       ]
@@ -742,8 +742,8 @@
           "refId": "A"
         },
         {
-          "expr": "kube_deployment_status_replicas_ready{deployment=\"telemetry-consumer\"}",
-          "legendFormat": "telemetry-consumer 파드 수",
+          "expr": "kube_deployment_status_replicas_ready{deployment=\"fault-diagnosis-service\"}",
+          "legendFormat": "fault-diagnosis-service 파드 수",
           "refId": "B"
         }
       ]
@@ -776,8 +776,20 @@
         "overrides": [
           {
             "matcher": {
-              "id": "byName",
-              "options": "파드 수"
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "C"
             },
             "properties": [
               {
@@ -805,8 +817,13 @@
         },
         {
           "expr": "kube_deployment_status_replicas_ready{deployment=\"anomaly-consumer\"}",
-          "legendFormat": "파드 수",
+          "legendFormat": "anomaly-consumer 파드 수",
           "refId": "B"
+        },
+        {
+          "expr": "kube_deployment_status_replicas_ready{deployment=\"fault-diagnosis-service\"}",
+          "legendFormat": "fault-diagnosis-service 파드 수",
+          "refId": "C"
         }
       ]
     }
